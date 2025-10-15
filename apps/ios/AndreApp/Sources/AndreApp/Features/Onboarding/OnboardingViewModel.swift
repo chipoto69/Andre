@@ -195,6 +195,7 @@ public final class OnboardingViewModel {
 
     /// Complete onboarding flow
     public func completeOnboarding() {
+        markCurrentScreenViewed()
         state.complete()
     }
 

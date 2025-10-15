@@ -15,6 +15,7 @@ public struct AndreApp: View {
             } else {
                 OnboardingContainerView {
                     // Mark onboarding as completed and show main app
+                    UserDefaults.standard.hasCompletedOnboarding = true
                     hasCompletedOnboarding = true
                 }
             }
