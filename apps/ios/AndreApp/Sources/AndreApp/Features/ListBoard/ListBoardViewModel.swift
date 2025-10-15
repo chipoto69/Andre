@@ -86,7 +86,7 @@ public final class ListBoardViewModel {
         await refreshBoardFromCache()
 
         do {
-            try await syncService.syncListItem(item)
+            try await syncService.createListItem(item)
         } catch {
             self.error = error
             print("Failed to sync new item: \(error)")
@@ -99,7 +99,7 @@ public final class ListBoardViewModel {
         await refreshBoardFromCache()
 
         do {
-            try await syncService.syncListItem(item)
+            try await syncService.updateListItem(item)
         } catch {
             self.error = error
             print("Failed to sync updated item: \(error)")

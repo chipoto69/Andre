@@ -549,26 +549,42 @@ public struct QuickCaptureSheet: View {
 // MARK: - Enhanced Anti-Todo View
 
 public struct AntiTodoViewEnhanced: View {
-    @State private var entries = AntiTodoLog.placeholder
+    @State private var viewModel = AntiTodoViewModel()
     @State private var showAddEntry = false
+    @State private var newEntryTitle = ""
 
     public init() {}
 
     public var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: Spacing.lg) {
-                    // Header
-                    headerSection
+            Group {
+                if viewModel.isLoading {
+                    LoadingIndicator(
+                        style: .pulse,
+                        size: .large,
+                        message: "Loading your wins..."
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: Spacing.lg) {
+                            headerSection
 
-                    // Entries
-                    if entries.entries.isEmpty {
-                        emptyState
-                    } else {
-                        entriesList
+                            if let error = viewModel.error {
+                                Text("Sync issue: \(error.localizedDescription)")
+                                    .font(.labelSmall)
+                                    .foregroundColor(.statusWarning)
+                            }
+
+                            if viewModel.log.entries.isEmpty {
+                                emptyState
+                            } else {
+                                entriesList
+                            }
+                        }
+                        .padding(Spacing.screenPadding)
                     }
                 }
-                .padding(Spacing.screenPadding)
             }
             .background(Color.backgroundPrimary)
             .navigationTitle("Anti-Todo")
@@ -581,7 +597,21 @@ public struct AntiTodoViewEnhanced: View {
                 }
             }
             .sheet(isPresented: $showAddEntry) {
-                // TODO: Add win entry sheet
+                AddAntiTodoEntrySheet(
+                    newEntryTitle: $newEntryTitle,
+                    onSave: { title in
+                        Task {
+                            await viewModel.logWin(title)
+                            await viewModel.loadLog(for: viewModel.log.date)
+                        }
+                    }
+                )
+            }
+            .task {
+                await viewModel.loadLog()
+            }
+            .refreshable {
+                await viewModel.loadLog()
             }
         }
     }
@@ -595,7 +625,7 @@ public struct AntiTodoViewEnhanced: View {
                         .font(.titleMedium)
                         .foregroundColor(.textPrimary)
 
-                    Text("\(entries.entries.count) accomplishments logged")
+                    Text("\(viewModel.log.entries.count) accomplishments logged")
                         .font(.bodySmall)
                         .foregroundColor(.textSecondary)
                 }
@@ -612,7 +642,7 @@ public struct AntiTodoViewEnhanced: View {
     @ViewBuilder
     private var entriesList: some View {
         VStack(spacing: Spacing.md) {
-            ForEach(entries.entries) { entry in
+            ForEach(viewModel.log.entries) { entry in
                 WinEntryRow(entry: entry)
             }
         }
@@ -638,6 +668,46 @@ public struct AntiTodoViewEnhanced: View {
             .frame(maxWidth: .infinity)
             .padding(Spacing.xl)
         }
+    }
+}
+
+private struct AddAntiTodoEntrySheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var newEntryTitle: String
+    var onSave: (String) -> Void
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: Spacing.lg) {
+                AndreTextField(
+                    "Win title",
+                    placeholder: "What did you accomplish?",
+                    icon: "sparkle",
+                    text: $newEntryTitle
+                )
+
+                Spacer()
+            }
+            .padding(Spacing.screenPadding)
+            .background(Color.backgroundPrimary)
+            .navigationTitle("Log Win")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Save") {
+                        onSave(newEntryTitle)
+                        newEntryTitle = ""
+                        dismiss()
+                    }
+                    .disabled(newEntryTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.height(220), .medium])
     }
 }
 

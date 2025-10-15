@@ -157,6 +157,16 @@ public extension LocalStore {
             }
         }
     }
+
+    /// Replace the cached Anti-Todo log with a new snapshot.
+    func saveAntiTodoLog(_ log: AntiTodoLog) async {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                self.antiTodo = log
+                continuation.resume()
+            }
+        }
+    }
 }
 
 // MARK: - Private helpers
