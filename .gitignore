@@ -1,0 +1,17 @@
+# Node
+node_modules/
+dist/
+
+# Swift
+.swiftpm/
+.build/
+xcuserdata/
+DerivedData/
+
+# Editor
+.idea/
+.vscode/
+
+# Runtime
+andre.db
+.DS_Store
