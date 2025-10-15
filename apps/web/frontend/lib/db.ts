@@ -197,8 +197,12 @@ class DatabaseManager {
 
   async getAntiTodoEntriesByDate(date: string): Promise<AntiTodoEntry[]> {
     const db = await this.init();
-    const allEntries = await db.getAll('antiTodoEntries');
-    return allEntries.filter((entry) => entry.completedAt.startsWith(date));
+    // Use index range for better performance instead of filtering all records
+    const range = IDBKeyRange.bound(
+      `${date}T00:00:00.000Z`,
+      `${date}T23:59:59.999Z`
+    );
+    return db.getAllFromIndex('antiTodoEntries', 'by-completed', range);
   }
 
   async deleteAntiTodoEntry(id: string): Promise<void> {
