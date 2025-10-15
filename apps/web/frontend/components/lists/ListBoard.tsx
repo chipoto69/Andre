@@ -1,12 +1,12 @@
 'use client';
 
-import { Board } from '@/lib/api-client';
+import { Board, ListItem } from '@/lib/api-client';
 import { ListColumn } from './ListColumn';
 
 interface ListBoardProps {
   board: Board;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: any) => void;
+  onUpdate: (id: string, updates: Partial<ListItem>) => void;
 }
 
 export function ListBoard({ board, onDelete, onUpdate }: ListBoardProps) {

@@ -9,7 +9,7 @@ interface ListColumnProps {
   listType: ListType;
   items: ListItem[];
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: any) => void;
+  onUpdate: (id: string, updates: Partial<ListItem>) => void;
 }
 
 const listTypeColors: Record<Exclude<ListType, 'antiTodo'>, string> = {
