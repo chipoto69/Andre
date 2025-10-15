@@ -5,8 +5,7 @@ import AndreApp
 struct Andre: App {
     var body: some Scene {
         WindowGroup {
-            AndreApp.AndreApp()
-                .preferredColorScheme(.dark)
+            AndreApp()
         }
     }
 }
