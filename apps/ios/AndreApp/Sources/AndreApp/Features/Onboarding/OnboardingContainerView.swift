@@ -17,13 +17,21 @@ public struct OnboardingContainerView: View {
     public var body: some View {
         @Bindable var viewModel = viewModel
 
+        let selection = Binding(
+            get: { viewModel.currentScreenIndex },
+            set: { index in
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    viewModel.goToScreenIndex(index)
+                }
+            }
+        )
+
         ZStack(alignment: .top) {
             // Main content
-            TabView(selection: $viewModel.currentScreenIndex) {
+            TabView(selection: selection) {
                 // Phase 1: Philosophy (Screens 1-3)
                 WelcomeScreen(
-                    onContinue: { goToNext() },
-                    onSkip: { skipToScreen(3) }
+                    onContinue: { goToNext() }
                 )
                 .tag(0)
 
