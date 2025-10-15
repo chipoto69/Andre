@@ -6,7 +6,6 @@ import SwiftUI
 /// Integrates with OnboardingViewModel for state persistence.
 public struct OnboardingContainerView: View {
     @State private var viewModel = OnboardingViewModel()
-    @State private var currentPage: Int = 0
 
     /// Callback when onboarding is completed
     let onComplete: () -> Void
@@ -16,9 +15,11 @@ public struct OnboardingContainerView: View {
     }
 
     public var body: some View {
+        @Bindable var viewModel = viewModel
+
         ZStack(alignment: .top) {
             // Main content
-            TabView(selection: $currentPage) {
+            TabView(selection: $viewModel.currentScreenIndex) {
                 // Phase 1: Philosophy (Screens 1-3)
                 WelcomeScreen(
                     onContinue: { goToNext() },
@@ -118,7 +119,7 @@ public struct OnboardingContainerView: View {
             }
 
             // Back button (hidden on first and last screen)
-            if currentPage > 0 && currentPage < 11 {
+            if viewModel.currentScreenIndex > 0 && viewModel.currentScreenIndex < 11 {
                 VStack {
                     HStack {
                         backButton
@@ -133,8 +134,11 @@ public struct OnboardingContainerView: View {
             }
         }
         .background(Color.backgroundPrimary.ignoresSafeArea())
-        .onChange(of: currentPage) { _, newValue in
-            updateViewModelProgress(to: newValue)
+        .onAppear {
+            viewModel.markCurrentScreenViewed()
+        }
+        .onChange(of: viewModel.currentScreenIndex) { _, _ in
+            viewModel.markCurrentScreenViewed()
         }
     }
 
@@ -192,32 +196,22 @@ public struct OnboardingContainerView: View {
     // MARK: - Navigation
 
     private func goToNext() {
-        guard currentPage < 11 else {
-            completeOnboarding()
-            return
-        }
-
         withAnimation(.easeInOut(duration: 0.3)) {
-            currentPage += 1
+            viewModel.goToNext()
         }
     }
 
     private func goToPrevious() {
-        guard currentPage > 0 else { return }
+        guard viewModel.canGoBack else { return }
 
         withAnimation(.easeInOut(duration: 0.3)) {
-            currentPage -= 1
+            viewModel.goToPrevious()
         }
     }
 
     private func skipToScreen(_ screenIndex: Int) {
-        guard screenIndex <= 11 else {
-            completeOnboarding()
-            return
-        }
-
         withAnimation(.easeInOut(duration: 0.3)) {
-            currentPage = screenIndex
+            viewModel.goToScreenIndex(screenIndex)
         }
     }
 
@@ -227,16 +221,6 @@ public struct OnboardingContainerView: View {
     }
 
     // MARK: - State Updates
-
-    private func updateViewModelProgress(to pageIndex: Int) {
-        // Sync current page with view model's internal state
-        // The view model tracks screens by enum, we track by Int
-        let screens = OnboardingViewModel.OnboardingScreen.allCases
-        guard pageIndex < screens.count else { return }
-
-        // Mark screen as viewed
-        viewModel.markScreenViewed(screens[pageIndex].rawValue)
-    }
 
     // MARK: - Interactive Callbacks
 
@@ -289,7 +273,7 @@ public struct OnboardingContainerView: View {
     // MARK: - Computed Properties
 
     private var progress: Double {
-        Double(currentPage + 1) / 12.0
+        viewModel.progress
     }
 }
 
