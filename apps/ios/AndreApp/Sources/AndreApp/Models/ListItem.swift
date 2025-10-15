@@ -19,7 +19,7 @@ public struct ListItem: Identifiable, Hashable, Codable {
 
     public enum Status: String, Codable {
         case planned
-        case inProgress
+        case inProgress = "in_progress"
         case completed
         case archived
     }

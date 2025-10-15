@@ -8,11 +8,17 @@ export class ListRepository {
     const persisted = {
       ...item,
       id: item.id ?? crypto.randomUUID(),
-      createdAt: item.createdAt ?? new Date().toISOString()
+      createdAt: item.createdAt ?? new Date().toISOString(),
+      status: item.status ?? "planned",
+      notes: item.notes ?? null,
+      dueAt: item.dueAt ?? null,
+      followUpAt: item.followUpAt ?? null,
+      completedAt: item.completedAt ?? null,
+      tags: item.tags ?? [],
+      confidenceScore: item.confidenceScore ?? 0.5
     };
 
-    this.db
-      .prepare(
+    const statement = this.db.prepare(
         `
         INSERT INTO list_items (
           id, title, list_type, status, notes, due_at, follow_up_at,
@@ -32,13 +38,20 @@ export class ListRepository {
           tags = excluded.tags,
           confidence_score = excluded.confidence_score
       `
-      )
-      .run({
-        ...persisted,
-        tags: JSON.stringify(persisted.tags ?? [])
-      });
+    );
 
-    return ListItemSchema.parse(persisted);
+    statement.run({
+      ...persisted,
+      tags: JSON.stringify(persisted.tags)
+    });
+
+    return ListItemSchema.parse({
+      ...persisted,
+      notes: persisted.notes ?? undefined,
+      dueAt: persisted.dueAt ?? undefined,
+      followUpAt: persisted.followUpAt ?? undefined,
+      completedAt: persisted.completedAt ?? undefined
+    });
   }
 
   update(id: string, patch: UpdateListItem): ListItem | null {
