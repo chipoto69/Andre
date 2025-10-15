@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, ListType } from '@/lib/api-client';
+import { apiClient, ListType, CreateListItemPayload } from '@/lib/api-client';
 import { Modal, TextField, TextArea, Select, Button } from '@/components/ui';
 
 interface QuickCaptureModalProps {
@@ -23,8 +23,7 @@ export function QuickCaptureModal({
   const [error, setError] = useState('');
 
   const createMutation = useMutation({
-    mutationFn: (data: { title: string; listType: ListType; notes?: string }) =>
-      apiClient.createListItem(data),
+    mutationFn: (data: CreateListItemPayload) => apiClient.createListItem(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lists'] });
       handleClose();

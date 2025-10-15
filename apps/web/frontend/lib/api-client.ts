@@ -75,6 +75,17 @@ export const BoardSchema = z.object({
 });
 export type Board = z.infer<typeof BoardSchema>;
 
+// Payload schemas for API operations
+export const CreateListItemPayloadSchema = z.object({
+  title: z.string().min(1),
+  listType: ListTypeSchema,
+  notes: z.string().max(2000).optional(),
+  dueAt: z.string().datetime().optional(),
+  followUpAt: z.string().datetime().optional(),
+  tags: z.array(z.string()).optional(),
+});
+export type CreateListItemPayload = z.infer<typeof CreateListItemPayloadSchema>;
+
 // ============================================================================
 // API Client
 // ============================================================================
@@ -123,12 +134,12 @@ class ApiClient {
     return BoardSchema.parse(data);
   }
 
-  async createListItem(
-    item: Omit<ListItem, 'id' | 'createdAt' | 'status' | 'tags' | 'confidenceScore'>
-  ): Promise<ListItem> {
+  async createListItem(item: CreateListItemPayload): Promise<ListItem> {
+    // Validate payload before sending to API
+    const validatedPayload = CreateListItemPayloadSchema.parse(item);
     const data = await this.request<unknown>('/v1/lists', {
       method: 'POST',
-      body: JSON.stringify(item),
+      body: JSON.stringify(validatedPayload),
     });
     return ListItemSchema.parse(data);
   }
