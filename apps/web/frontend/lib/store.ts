@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
-  ListItem,
   DailyFocusCard,
   Suggestion,
   AntiTodoEntry,
