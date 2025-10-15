@@ -14,11 +14,11 @@ public final class AntiTodoViewModel {
     private let calendar = Calendar.current
 
     public init(
-        localStore: LocalStore = .shared,
-        syncService: SyncService = .shared
+        localStore: LocalStore? = nil,
+        syncService: SyncService? = nil
     ) {
-        self.localStore = localStore
-        self.syncService = syncService
+        self.localStore = localStore ?? LocalStore.shared
+        self.syncService = syncService ?? SyncService.shared
         self.log = AntiTodoLog(date: Date(), entries: [])
     }
 

@@ -42,11 +42,11 @@ public final class FocusCardViewModel {
     // MARK: - Initialization
 
     public init(
-        localStore: LocalStore = .shared,
-        syncService: SyncService = .shared
+        localStore: LocalStore? = nil,
+        syncService: SyncService? = nil
     ) {
-        self.localStore = localStore
-        self.syncService = syncService
+        self.localStore = localStore ?? LocalStore.shared
+        self.syncService = syncService ?? SyncService.shared
     }
 
     // MARK: - Actions
