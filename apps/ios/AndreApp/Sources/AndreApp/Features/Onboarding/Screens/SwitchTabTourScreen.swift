@@ -80,7 +80,7 @@ public struct SwitchTabTourScreen: View {
                         Divider()
                             .background(Color.textTertiary.opacity(0.3))
 
-                        Text(""Instead of forcing focus, redirect your energy productively"")
+                        Text("Instead of forcing focus, redirect your energy productively")
                             .font(.bodySmall)
                             .italic()
                             .foregroundColor(.textTertiary)
