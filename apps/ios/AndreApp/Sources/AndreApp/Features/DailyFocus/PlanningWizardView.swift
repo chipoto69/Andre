@@ -343,9 +343,19 @@ public struct PlanningWizardView: View {
     @ViewBuilder
     private var energyBudgetPicker: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Energy Budget")
-                .font(.titleSmall)
-                .foregroundColor(.textPrimary)
+            HStack {
+                Text("Energy Budget")
+                    .font(.titleSmall)
+                    .foregroundColor(.textPrimary)
+
+                Image(systemName: "info.circle")
+                    .font(.system(size: 14))
+                    .foregroundColor(.brandCyan)
+            }
+
+            Text("How much energy do you expect to have tomorrow?")
+                .font(.bodySmall)
+                .foregroundColor(.textSecondary)
 
             HStack(spacing: Spacing.md) {
                 ForEach([DailyFocusCard.EnergyBudget.low, .medium, .high], id: \.self) { budget in
@@ -370,6 +380,11 @@ public struct PlanningWizardView: View {
                 Text(budget.rawValue.capitalized)
                     .font(.labelMedium)
                     .foregroundColor(viewModel.energyBudget == budget ? .textPrimary : .textSecondary)
+
+                Text(energyDescription(budget))
+                    .font(.labelSmall)
+                    .foregroundColor(.textTertiary)
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
             .padding(Spacing.md)
@@ -381,6 +396,14 @@ public struct PlanningWizardView: View {
             )
         }
         .buttonStyle(.plain)
+    }
+
+    private func energyDescription(_ energy: DailyFocusCard.EnergyBudget) -> String {
+        switch energy {
+        case .high: return "Peak focus"
+        case .medium: return "Steady pace"
+        case .low: return "Easy does it"
+        }
     }
 
     private func energyIcon(_ energy: DailyFocusCard.EnergyBudget) -> String {

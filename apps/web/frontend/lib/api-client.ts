@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
 
 // ============================================================================
 // Domain Schemas (matching backend)
@@ -167,10 +167,11 @@ class ApiClient {
 
   async getFocusCard(date: string): Promise<DailyFocusCard | null> {
     try {
-      const data = await this.request<unknown>(`/v1/focus/${date}`);
+      const data = await this.request<unknown>(
+        `/v1/focus-card?date=${encodeURIComponent(date)}`
+      );
       return DailyFocusCardSchema.parse(data);
     } catch (error) {
-      // Return null if not found (404)
       if (error instanceof Error && error.message.includes('404')) {
         return null;
       }
@@ -178,29 +179,16 @@ class ApiClient {
     }
   }
 
-  async createFocusCard(
-    card: Omit<DailyFocusCard, 'id'>
-  ): Promise<DailyFocusCard> {
-    const data = await this.request<unknown>('/v1/focus', {
-      method: 'POST',
+  async saveFocusCard(card: DailyFocusCard): Promise<DailyFocusCard> {
+    const data = await this.request<unknown>('/v1/focus-card', {
+      method: 'PUT',
       body: JSON.stringify(card),
     });
     return DailyFocusCardSchema.parse(data);
   }
 
-  async updateFocusCard(
-    id: string,
-    updates: Partial<Omit<DailyFocusCard, 'id'>>
-  ): Promise<DailyFocusCard> {
-    const data = await this.request<unknown>(`/v1/focus/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-    return DailyFocusCardSchema.parse(data);
-  }
-
   async generateFocusCard(date: string): Promise<DailyFocusCard> {
-    const data = await this.request<unknown>('/v1/focus/generate', {
+    const data = await this.request<unknown>('/v1/focus-card/generate', {
       method: 'POST',
       body: JSON.stringify({ date }),
     });
@@ -223,7 +211,9 @@ class ApiClient {
   // ============================================================================
 
   async getAntiTodoEntries(date: string): Promise<AntiTodoEntry[]> {
-    const data = await this.request<unknown>(`/v1/anti-todo/${date}`);
+    const data = await this.request<unknown>(
+      `/v1/anti-todo?date=${encodeURIComponent(date)}`
+    );
     return z.array(AntiTodoEntrySchema).parse(data);
   }
 
@@ -235,19 +225,6 @@ class ApiClient {
       body: JSON.stringify(entry),
     });
     return AntiTodoEntrySchema.parse(data);
-  }
-
-  async getAntiTodoSummary(date: string): Promise<{
-    count: number;
-    entries: AntiTodoEntry[];
-  }> {
-    const data = await this.request<unknown>(`/v1/anti-todo/summary?date=${date}`);
-    return z
-      .object({
-        count: z.number(),
-        entries: z.array(AntiTodoEntrySchema),
-      })
-      .parse(data);
   }
 }
 

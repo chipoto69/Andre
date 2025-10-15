@@ -1,9 +1,5 @@
 import { type Database } from "better-sqlite3";
-import {
-  DailyFocusCard,
-  DailyFocusCardSchema,
-  GenerateFocusCardPayload
-} from "../domain/focusCard.js";
+import { DailyFocusCard, DailyFocusCardSchema } from "../domain/focusCard.js";
 import { ListItemSchema } from "../domain/listItem.js";
 
 export class FocusCardRepository {
@@ -13,28 +9,33 @@ export class FocusCardRepository {
     const persisted = {
       ...card,
       id: card.id ?? crypto.randomUUID(),
-      date: card.date
+      date: card.date,
+      usedAiSuggestions: card.usedAiSuggestions ?? false
     };
 
     this.db
       .prepare(
         `
-        INSERT INTO focus_cards (id, date, items, theme, energy_budget, success_metric, reflection)
-        VALUES (@id, @date, @items, @theme, @energyBudget, @successMetric, @reflection)
+        INSERT INTO focus_cards (id, date, items, theme, energy_budget, success_metric, reflection, used_ai_suggestions)
+        VALUES (@id, @date, @items, @theme, @energyBudget, @successMetric, @reflection, @usedAiSuggestions)
         ON CONFLICT(date) DO UPDATE SET
           items = excluded.items,
           theme = excluded.theme,
           energy_budget = excluded.energy_budget,
           success_metric = excluded.success_metric,
-          reflection = excluded.reflection
+          reflection = excluded.reflection,
+          used_ai_suggestions = excluded.used_ai_suggestions
       `
       )
       .run({
         ...persisted,
-        items: JSON.stringify(persisted.items)
+        items: JSON.stringify(persisted.items),
+        usedAiSuggestions: persisted.usedAiSuggestions ? 1 : 0
       });
 
-    return DailyFocusCardSchema.parse(card);
+    return DailyFocusCardSchema.parse({
+      ...persisted
+    });
   }
 
   findByDate(date: string): DailyFocusCard | null {
@@ -57,6 +58,7 @@ export class FocusCardRepository {
         energyBudget: row.energy_budget ?? "medium",
         successMetric: row.success_metric ?? ""
       },
+      usedAiSuggestions: Boolean(row.used_ai_suggestions),
       reflection: row.reflection ?? ""
     });
   }

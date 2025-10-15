@@ -2,11 +2,14 @@ import SwiftUI
 
 /// Main view for displaying and interacting with daily focus cards.
 ///
-/// Shows tomorrow's focus card by default and provides access to
-/// the planning wizard for creating new cards.
+/// Shows today's focus card by default with a date picker for navigation.
+/// Provides access to the planning wizard for creating new cards.
 public struct FocusCardView: View {
     @State private var viewModel = FocusCardViewModel()
     @State private var showPlanningWizard = false
+    @State private var showInsights = false
+    @State private var selectedDate = Date()
+    @State private var showDatePicker = false
 
     public init() {}
 
@@ -33,20 +36,73 @@ public struct FocusCardView: View {
             .navigationTitle("Daily Focus")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    HStack(spacing: Spacing.xs) {
+                        Button(action: {
+                            selectedDate = Calendar.current.date(byAdding: .day, value: -1, to: selectedDate) ?? selectedDate
+                        }) {
+                            Image(systemName: "chevron.left")
+                        }
+
+                        Button(action: { showDatePicker = true }) {
+                            Text(dateLabel(for: selectedDate))
+                                .font(.labelMedium)
+                        }
+
+                        Button(action: {
+                            selectedDate = Calendar.current.date(byAdding: .day, value: 1, to: selectedDate) ?? selectedDate
+                        }) {
+                            Image(systemName: "chevron.right")
+                        }
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { showPlanningWizard = true }) {
-                        Label("Plan", systemImage: "calendar.badge.plus")
+                    Menu {
+                        Button(action: { showPlanningWizard = true }) {
+                            Label("Plan Tomorrow", systemImage: "calendar.badge.plus")
+                        }
+
+                        Button(action: { showInsights = true }) {
+                            Label("View Insights", systemImage: "chart.line.uptrend.xyaxis")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
             .sheet(isPresented: $showPlanningWizard) {
-                PlanningWizardView(viewModel: viewModel)
+                PlanningWizard2View(viewModel: viewModel)
             }
-            .task {
-                await viewModel.loadTomorrowsCard()
+            .sheet(isPresented: $showInsights) {
+                UserInsightsView()
+            }
+            .sheet(isPresented: $showDatePicker) {
+                NavigationStack {
+                    DatePicker(
+                        "Select Date",
+                        selection: $selectedDate,
+                        displayedComponents: [.date]
+                    )
+                    .datePickerStyle(.graphical)
+                    .padding()
+                    .navigationTitle("Choose Date")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Done") {
+                                showDatePicker = false
+                            }
+                        }
+                    }
+                }
+                .presentationDetents([.medium])
+            }
+            .task(id: selectedDate) {
+                await viewModel.loadFocusCard(for: selectedDate)
             }
             .refreshable {
-                await viewModel.loadTomorrowsCard()
+                await viewModel.loadFocusCard(for: selectedDate)
             }
         }
     }
@@ -191,13 +247,13 @@ public struct FocusCardView: View {
                     .font(.titleLarge)
                     .foregroundColor(.textPrimary)
 
-                Text("Plan tomorrow's focus to see what matters most")
+                Text(emptyStateDescription)
                     .font(.bodyMedium)
                     .foregroundColor(.textSecondary)
                     .multilineTextAlignment(.center)
             }
 
-            AndreButton.primary("Plan Tomorrow", icon: "sparkles") {
+            AndreButton.primary(emptyStateButtonText, icon: "sparkles") {
                 showPlanningWizard = true
             }
         }
@@ -205,7 +261,46 @@ public struct FocusCardView: View {
         .frame(maxWidth: .infinity, minHeight: 400)
     }
 
+    private var emptyStateDescription: String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(selectedDate) {
+            return "Plan today's focus to see what matters most"
+        } else if calendar.isDateInTomorrow(selectedDate) {
+            return "Plan tomorrow's focus to see what matters most"
+        } else if selectedDate > Date() {
+            return "Plan your focus for this day"
+        } else {
+            return "No focus card was created for this date"
+        }
+    }
+
+    private var emptyStateButtonText: String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(selectedDate) {
+            return "Plan Today"
+        } else if calendar.isDateInTomorrow(selectedDate) {
+            return "Plan Tomorrow"
+        } else if selectedDate > Date() {
+            return "Plan This Day"
+        } else {
+            return "Create Focus Card"
+        }
+    }
+
     // MARK: - Helper Views
+
+    private func dateLabel(for date: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) {
+            return "Today"
+        } else if calendar.isDateInTomorrow(date) {
+            return "Tomorrow"
+        } else if calendar.isDateInYesterday(date) {
+            return "Yesterday"
+        } else {
+            return date.formatted(date: .abbreviated, time: .omitted)
+        }
+    }
 
     @ViewBuilder
     private func energyBadge(_ energy: DailyFocusCard.EnergyBudget) -> some View {

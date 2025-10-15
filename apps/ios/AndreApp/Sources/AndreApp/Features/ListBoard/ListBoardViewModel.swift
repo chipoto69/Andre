@@ -92,7 +92,9 @@ public final class ListBoardViewModel {
         await refreshBoardFromCache()
 
         do {
-            try await syncService.createListItem(item)
+            let canonical = try await syncService.createListItem(item)
+            await localStore.saveListItem(canonical, markForSync: false)
+            await refreshBoardFromCache()
         } catch {
             self.error = error
             print("Failed to sync new item: \(error)")
@@ -105,7 +107,9 @@ public final class ListBoardViewModel {
         await refreshBoardFromCache()
 
         do {
-            try await syncService.updateListItem(item)
+            let canonical = try await syncService.updateListItem(item)
+            await localStore.saveListItem(canonical, markForSync: false)
+            await refreshBoardFromCache()
         } catch {
             self.error = error
             print("Failed to sync updated item: \(error)")

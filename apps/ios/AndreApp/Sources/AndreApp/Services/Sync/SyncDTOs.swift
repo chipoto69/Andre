@@ -162,3 +162,123 @@ struct SuggestionDTO: Codable {
         )
     }
 }
+
+/// DTO for enhanced focus card generation with AI reasoning
+struct FocusCardSuggestionDTO: Codable {
+    struct ReasoningDTO: Codable {
+        let itemSelection: String
+        let themeRationale: String
+        let energyEstimate: String
+    }
+
+    let suggestedItems: [String]  // Item IDs
+    let theme: String
+    let energyBudget: String
+    let successMetric: String
+    let reasoning: ReasoningDTO
+
+    func toDomain() -> FocusCardSuggestion {
+        let energy: DailyFocusCard.EnergyBudget
+        switch energyBudget.lowercased() {
+        case "high":
+            energy = .high
+        case "medium":
+            energy = .medium
+        case "low":
+            energy = .low
+        default:
+            energy = .medium
+        }
+
+        return FocusCardSuggestion(
+            suggestedItemIDs: suggestedItems.compactMap { UUID(uuidString: $0) },
+            theme: theme,
+            energyBudget: energy,
+            successMetric: successMetric,
+            reasoning: FocusCardSuggestion.Reasoning(
+                itemSelection: reasoning.itemSelection,
+                themeRationale: reasoning.themeRationale,
+                energyEstimate: reasoning.energyEstimate
+            )
+        )
+    }
+}
+
+/// DTO for user insights response
+struct UserInsightsDTO: Codable {
+    struct CompletionPatternsDTO: Codable {
+        let bestDayOfWeek: String?
+        let bestTimeOfDay: String?
+        let averageCompletionRate: Double
+        let streak: Int
+    }
+
+    struct ListHealthMetricsDTO: Codable {
+        let count: Int
+        let staleItems: Int?
+        let avgDwellTime: Double?
+    }
+
+    struct ListHealthDTO: Codable {
+        let todo: ListHealthMetricsDTO
+        let watch: ListHealthMetricsDTO
+        let later: ListHealthMetricsDTO
+    }
+
+    struct SuggestionDTO: Codable {
+        let type: String
+        let message: String
+        let actionable: Bool
+    }
+
+    let completionPatterns: CompletionPatternsDTO
+    let listHealth: ListHealthDTO
+    let suggestions: [SuggestionDTO]
+
+    func toDomain() -> UserInsights {
+        UserInsights(
+            completionPatterns: UserInsights.CompletionPatterns(
+                bestDayOfWeek: completionPatterns.bestDayOfWeek,
+                bestTimeOfDay: completionPatterns.bestTimeOfDay,
+                averageCompletionRate: completionPatterns.averageCompletionRate,
+                streak: completionPatterns.streak
+            ),
+            listHealth: UserInsights.ListHealth(
+                todo: UserInsights.ListHealthMetrics(
+                    count: listHealth.todo.count,
+                    staleItems: listHealth.todo.staleItems,
+                    avgDwellTime: listHealth.todo.avgDwellTime
+                ),
+                watch: UserInsights.ListHealthMetrics(
+                    count: listHealth.watch.count,
+                    staleItems: listHealth.watch.staleItems,
+                    avgDwellTime: listHealth.watch.avgDwellTime
+                ),
+                later: UserInsights.ListHealthMetrics(
+                    count: listHealth.later.count,
+                    staleItems: listHealth.later.staleItems,
+                    avgDwellTime: listHealth.later.avgDwellTime
+                )
+            ),
+            suggestions: suggestions.map { dto in
+                let type: UserInsights.Suggestion.SuggestionType
+                switch dto.type.lowercased() {
+                case "insight":
+                    type = .insight
+                case "warning":
+                    type = .warning
+                case "tip":
+                    type = .tip
+                default:
+                    type = .insight
+                }
+
+                return UserInsights.Suggestion(
+                    type: type,
+                    message: dto.message,
+                    actionable: dto.actionable
+                )
+            }
+        )
+    }
+}

@@ -1,39 +1,39 @@
-# Backend Development Plan
+# Backend Roadmap (Q1 2026)
 
-## Goals
-- Deliver resilient APIs for the three canonical lists, nightly focus ritual, Anti-Todo ledger, and suggestion engine.
-- Provide a clean contract for iOS and web clients, including type-safe schemas.
-- Support offline-first sync, analytics, and future integrations.
+## Mission
+Deliver a secure, user-scoped API that keeps web and iOS clients in sync, supports offline merges, and is production-ready.
 
-## Milestone breakdown
-1. **Core data layer**
-   - Finalize schema for `list_items`, `focus_cards`, `anti_todo_entries`.
-   - Implement migrations (Drizzle/Prisma) and seeding scripts.
-   - Wrap persistence in repositories with interfaces for alternative databases.
-2. **API endpoints**
-   - CRUD for list items with diff/sync support.
-   - Focus card endpoints (`GET`, `POST /generate`, `PUT`) — **baseline live**.
-   - Anti-Todo logging + day summary retrieval — **baseline live via `/v1/anti-todo`**.
-3. **Sync & heuristics**
-   - Device token management, conflict detection, merge policies.
-   - Structured procrastination recommendation service (initial heuristics) — **prototype shipped via `/v1/suggestions/structured-procrastination`**.
-   - Nightly worker for focus card pre-generation.
-4. **Observability & quality**
-   - Add pino logger, OpenTelemetry traces, structured error responses.
-   - Vitest suites (unit + contract), supertest integration tests, load testing harness.
-   - CI pipelines (GitHub Actions) covering lint, test, build.
-5. **Integrations**
-   - Calendar ingestion (Google/Outlook) for deadlines.
-   - Email digests summarizing Anti-Todo wins.
-   - Webhooks for third-party automations.
+---
 
-## Decision log
-- Framework: Fastify for speed + type safety.
-- Validation: Zod via fastify type provider.
-- Queue: Start with in-process scheduler; graduate to BullMQ or Temporal.
-- Auth: Magic link provider (Clerk/Supabase). Use JWT for API gate.
+## 1. Security & Identity (Now)
+- [ ] Introduce authentication middleware (JWT or session) and require it on all routes.
+- [ ] Extend `list_items`, `focus_cards`, `anti_todo_entries` with `user_id` + indexes.
+- [ ] Update repositories/services to filter by `user_id` and reject cross-user access.
+- [ ] Provide dev tooling: seeded demo user + Postman collection + `.env` template.
 
-## Open questions
-- Which analytics warehouse (BigQuery vs Snowflake) best suits event volume?
-- Should structured procrastination suggestions integrate with personal calendar priority?
-- Evaluate CRDT vs server-authoritative merge as user base scales.
+## 2. Schema & Migrations
+- [ ] Adopt a migration framework (Drizzle/Prisma/Knex) and store migrations in repo.
+- [ ] Create baseline migration reflecting current schema + new auth columns.
+- [ ] Add migration run step to CI + local bootstrap scripts.
+
+## 3. API Contract Alignment
+- [x] Harmonise focus/anti-todo endpoints to `/v1/focus-card` & `/v1/anti-todo?date=` with canonical responses. *(Phase 2 iOS payloads shipped for `/focus-card/generate` and `/user/insights`)*
+- [ ] Return created/updated entities (incl. server timestamps) for all POST/PUT calls.
+- [ ] Add Vitest contract tests to lock behaviour for web + iOS clients.
+
+## 4. Concurrency & Sync Safety
+- [ ] Add `version`/`updated_at` columns to mutable tables.
+- [ ] Enforce optimistic locking on update/delete (409 on stale version).
+- [ ] Emit sync-friendly error payloads consumed by clients for retry/rollback.
+
+## 5. Observability & Quality
+- [ ] Instrument request logging, structured errors, and basic metrics (p95, failure counts).
+- [ ] Expand Vitest coverage to route-level tests (lists/focus/anti-todo/suggestions).
+- [ ] Introduce Playwright smoke tests hitting the deployed API once staging is ready.
+
+## 6. Backlog / Nice-to-have
+- Calendar & email integrations.
+- Background worker for pre-generating focus cards & reminders.
+- Analytics warehouse evaluation.
+
+> Progress is expected to be tracked in issues referencing the checklist above. Update this plan after each sprint review.

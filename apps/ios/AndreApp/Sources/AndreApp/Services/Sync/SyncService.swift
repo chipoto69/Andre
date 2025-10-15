@@ -18,9 +18,17 @@ public final class SyncService {
         }
     }
 
+    private static func defaultBaseURL() -> URL {
+        if let override = ProcessInfo.processInfo.environment["ANDRE_API_URL"],
+           let url = URL(string: override) {
+            return url
+        }
+        return URL(string: "http://localhost:3333")!
+    }
+
     public static let shared = SyncService(
         config: Config(
-            baseURL: URL(string: "http://localhost:3333")!,
+            baseURL: defaultBaseURL(),
             authTokenProvider: { nil }
         )
     )
@@ -59,18 +67,28 @@ public final class SyncService {
         return dto.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter)
     }
 
-    public func createListItem(_ item: ListItem) async throws {
+    public func createListItem(_ item: ListItem) async throws -> ListItem {
         var request = try makeRequest(path: "/v1/lists", method: "POST")
         let payload = ListItemDTO(item: item, formatter: isoDateTimeFormatter)
         request.httpBody = try encoder.encode(payload)
-        _ = try await data(for: request)
+        let data = try await data(for: request)
+        let dto = try decoder.decode(ListItemDTO.self, from: data)
+        guard let created = dto.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter) else {
+            throw SyncError.invalidData
+        }
+        return created
     }
 
-    public func updateListItem(_ item: ListItem) async throws {
+    public func updateListItem(_ item: ListItem) async throws -> ListItem {
         var request = try makeRequest(path: "/v1/lists/\(item.id.uuidString)", method: "PUT")
         let payload = ListItemDTO(item: item, formatter: isoDateTimeFormatter)
         request.httpBody = try encoder.encode(payload)
-        _ = try await data(for: request)
+        let data = try await data(for: request)
+        let dto = try decoder.decode(ListItemDTO.self, from: data)
+        guard let updated = dto.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter) else {
+            throw SyncError.invalidData
+        }
+        return updated
     }
 
     public func deleteListItem(_ id: UUID) async throws {
@@ -115,6 +133,30 @@ public final class SyncService {
         return card
     }
 
+    /// Fetch AI-generated focus card suggestions with reasoning
+    /// Returns suggestions without persisting to database (client preview)
+    public func fetchFocusCardSuggestions(for date: Date = Date(), deviceId: String? = nil) async throws -> FocusCardSuggestion {
+        var request = try makeRequest(path: "/v1/focus-card/generate", method: "POST")
+        let payload = GenerateFocusCardPayload(
+            date: dayFormatter.string(from: date),
+            deviceId: deviceId
+        )
+        request.httpBody = try encoder.encode(payload)
+        request.timeoutInterval = 5.0 // Slightly longer timeout for AI generation
+
+        let data = try await data(for: request)
+        let dto = try decoder.decode(FocusCardSuggestionDTO.self, from: data)
+        return dto.toDomain()
+    }
+
+    /// Fetch user insights (completion patterns, list health, suggestions)
+    public func fetchUserInsights() async throws -> UserInsights {
+        let request = try makeRequest(path: "/v1/user/insights", method: "GET")
+        let data = try await data(for: request)
+        let dto = try decoder.decode(UserInsightsDTO.self, from: data)
+        return dto.toDomain()
+    }
+
     public func fetchAntiTodoLog(for date: Date) async throws -> AntiTodoLog {
         let isoDate = dayFormatter.string(from: date)
         let request = try makeRequest(
@@ -147,6 +189,19 @@ public final class SyncService {
         let data = try await data(for: request)
         let suggestions = try decoder.decode([SuggestionDTO].self, from: data)
         return suggestions.map { $0.toDomain() }
+    }
+
+    /// Classify item text to suggest appropriate list type
+    /// Uses backend ML classification (with timeout for quick UX)
+    public func classifyItem(text: String) async throws -> ItemClassification {
+        var request = try makeRequest(path: "/v1/items/classify", method: "POST")
+        let payload = ClassifyItemPayload(text: text)
+        request.httpBody = try encoder.encode(payload)
+        request.timeoutInterval = 3.0 // Quick timeout for responsive UX
+
+        let data = try await data(for: request)
+        let dto = try decoder.decode(ItemClassificationDTO.self, from: data)
+        return dto.toDomain()
     }
 
     private func makeRequest(
@@ -188,4 +243,49 @@ public final class SyncService {
 private struct GenerateFocusCardPayload: Encodable {
     let date: String
     let deviceId: String?
+}
+
+// MARK: - Item Classification
+
+/// Domain model for item classification result
+public struct ItemClassification {
+    public let suggestedListType: ListItem.ListType
+    public let confidence: Double
+
+    public init(suggestedListType: ListItem.ListType, confidence: Double) {
+        self.suggestedListType = suggestedListType
+        self.confidence = confidence
+    }
+}
+
+/// Payload for classifying item text
+private struct ClassifyItemPayload: Encodable {
+    let text: String
+}
+
+/// DTO for classification response from API
+private struct ItemClassificationDTO: Decodable {
+    let suggestedListType: String
+    let confidence: Double
+
+    func toDomain() -> ItemClassification {
+        let listType: ListItem.ListType
+        switch suggestedListType.lowercased() {
+        case "todo":
+            listType = .todo
+        case "watch":
+            listType = .watch
+        case "later":
+            listType = .later
+        case "anti-todo":
+            listType = .antiTodo
+        default:
+            listType = .todo // Default fallback
+        }
+
+        return ItemClassification(
+            suggestedListType: listType,
+            confidence: confidence
+        )
+    }
 }

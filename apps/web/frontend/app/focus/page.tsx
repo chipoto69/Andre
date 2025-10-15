@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, DailyFocusCard } from '@/lib/api-client';
 import { useAppStore } from '@/lib/store';
 import { FocusCard } from '@/components/focus/FocusCard';
 import { PlanningWizard } from '@/components/focus/PlanningWizard';
@@ -13,6 +13,21 @@ export default function FocusPage() {
   const { isPlanningWizardOpen, setPlanningWizardOpen, selectedItemsForPlanning } =
     useAppStore();
   const selectedDate = getTodayDate();
+
+  const mergeFocusCard = (
+    base: DailyFocusCard,
+    updates: Partial<DailyFocusCard>
+  ): DailyFocusCard => ({
+    ...base,
+    ...updates,
+    items: updates.items ?? base.items,
+    meta: {
+      ...base.meta,
+      ...(updates.meta ?? {}),
+    },
+    reflection:
+      updates.reflection !== undefined ? updates.reflection : base.reflection,
+  });
 
   // Fetch today's focus card
   const {
@@ -35,12 +50,15 @@ export default function FocusPage() {
   // Update focus card mutation
   const updateMutation = useMutation({
     mutationFn: ({
-      id,
+      baseCard,
       updates,
     }: {
-      id: string;
-      updates: Partial<typeof apiClient.updateFocusCard extends (id: string, updates: infer U) => unknown ? U : never>;
-    }) => apiClient.updateFocusCard(id, updates),
+      baseCard: DailyFocusCard;
+      updates: Partial<DailyFocusCard>;
+    }) => {
+      const merged = mergeFocusCard(baseCard, updates);
+      return apiClient.saveFocusCard(merged);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['focus'] });
     },
@@ -154,7 +172,7 @@ export default function FocusPage() {
           <FocusCard
             card={focusCard}
             onUpdate={(updates) =>
-              updateMutation.mutate({ id: focusCard.id, updates })
+              updateMutation.mutate({ baseCard: focusCard, updates })
             }
           />
         )}

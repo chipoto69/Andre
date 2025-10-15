@@ -4,6 +4,14 @@ import Foundation
 ///
 /// Provides a type-safe interface for making authenticated API requests
 /// with automatic retry logic, timeout handling, and detailed error reporting.
+private func resolveAPIBaseURL(defaultValue: String) -> URL {
+    if let override = ProcessInfo.processInfo.environment["ANDRE_API_URL"],
+       let url = URL(string: override) {
+        return url
+    }
+    return URL(string: defaultValue)!
+}
+
 public final class APIClient {
     // MARK: - Configuration
 
@@ -26,11 +34,11 @@ public final class APIClient {
         }
 
         public static let production = Configuration(
-            baseURL: URL(string: "https://api.andre.app")!
+            baseURL: resolveAPIBaseURL(defaultValue: "https://api.andre.app")
         )
 
         public static let development = Configuration(
-            baseURL: URL(string: "http://localhost:3000")!,
+            baseURL: resolveAPIBaseURL(defaultValue: "http://localhost:3333"),
             timeout: 60.0
         )
     }

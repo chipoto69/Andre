@@ -3,7 +3,8 @@ import { z } from "zod";
 import {
   AntiTodoEntrySchema,
   DailyFocusCardSchema,
-  GenerateFocusCardPayloadSchema,
+  FocusCardSuggestionSchema,
+  GenerateFocusCardRequestSchema,
   IsoDateSchema
 } from "../domain/focusCard.js";
 
@@ -39,14 +40,14 @@ export const planningRoutes: FastifyPluginAsync = async (fastify) => {
     "/focus-card/generate",
     {
       schema: {
-        body: GenerateFocusCardPayloadSchema.optional(),
+        body: GenerateFocusCardRequestSchema,
         response: {
-          200: DailyFocusCardSchema
+          200: FocusCardSuggestionSchema
         }
       }
     },
     async (request) => {
-      return fastify.services.planService.generateFocusCard(request.body ?? {});
+      return fastify.services.planService.generateFocusCardSuggestions(request.body);
     }
   );
 

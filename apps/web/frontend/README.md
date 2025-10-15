@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Andre Web App
+
+Next.js 15 client for the Andre productivity system. Uses React Query + Zustand + Tailwind and mirrors the iOS design system.
+
+## Prerequisites
+- Node.js 20+
+- pnpm 9+
+- Backend API running locally on `http://localhost:3333` (or set `NEXT_PUBLIC_API_URL`).
 
 ## Getting Started
-
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+NEXT_PUBLIC_API_URL=http://localhost:3333 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs at [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
+| Name | Description | Default |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | Base URL for the Andre API | `http://localhost:3333` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create an `.env.local` file if you need to override the defaults.
 
-## Learn More
+## Key Scripts
+| Command | Description |
+| --- | --- |
+| `pnpm dev` | Start Next.js dev server |
+| `pnpm build` | Production build |
+| `pnpm lint` | ESLint (configured via `eslint.config.mjs`) |
+| `pnpm test` | Vitest (coming soon) |
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
+- `app/` – route segments (`/lists`, `/focus`, `/wins`).
+- `components/` – reusable UI + feature components.
+- `lib/api-client.ts` – API contract (Zod schemas + fetch wrapper).
+- `lib/db.ts` – IndexedDB helpers for offline caching.
+- `lib/store.ts` – Zustand global store (persisted via `localStorage`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Roadmap Snapshot (see `docs/web_development_roadmap.md`)
+1. Align API client with `/v1/focus-card` and `/v1/anti-todo?date=`.
+2. Hook IndexedDB cache + sync queue into React Query flows.
+3. Add optimistic updates and toasts for mutations.
+4. Support light/dark theme toggle instead of hardcoded dark mode.
+5. Add unit/integration tests (Vitest + Playwright).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Contributions should reference a roadmap task and include updated tests/docs.

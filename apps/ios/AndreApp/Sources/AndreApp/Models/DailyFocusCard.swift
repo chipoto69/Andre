@@ -13,7 +13,7 @@ public struct DailyFocusCard: Identifiable, Hashable, Codable {
         }
     }
 
-    public enum EnergyBudget: String, Codable {
+    public enum EnergyBudget: String, Codable, Sendable {
         case high
         case medium
         case low

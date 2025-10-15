@@ -30,7 +30,7 @@ public struct StructuredProcrastinationView: View {
                 .padding(Spacing.screenPadding)
             }
             .background(Color.backgroundPrimary)
-            .navigationTitle("Take a Break")
+            .navigationTitle("Suggestions")
             .navigationBarTitleDisplayMode(.large)
             .task {
                 await viewModel.loadSuggestions()
@@ -46,22 +46,29 @@ public struct StructuredProcrastinationView: View {
     @ViewBuilder
     private var headerSection: some View {
         AndreCard(style: .accent) {
-            HStack {
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Structured Procrastination")
-                        .font(.titleMedium)
-                        .foregroundColor(.textPrimary)
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                HStack {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Structured Procrastination")
+                            .font(.titleMedium)
+                            .foregroundColor(.textPrimary)
 
-                    Text("Stay productive with strategic task switches")
-                        .font(.bodySmall)
-                        .foregroundColor(.textSecondary)
+                        Text("Stay productive with strategic task switches")
+                            .font(.bodySmall)
+                            .foregroundColor(.textSecondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "arrow.triangle.branch")
+                        .font(.system(size: 32))
+                        .foregroundColor(.brandCyan)
                 }
 
-                Spacer()
-
-                Image(systemName: "arrow.triangle.branch")
-                    .font(.system(size: 32))
-                    .foregroundColor(.brandCyan)
+                Text("When you need a break from your current task, work on these alternative tasks instead of losing focus entirely.")
+                    .font(.bodySmall)
+                    .foregroundColor(.textSecondary.opacity(0.8))
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

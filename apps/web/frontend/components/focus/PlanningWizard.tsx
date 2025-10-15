@@ -66,7 +66,8 @@ export function PlanningWizard({
         selectedItemIds.has(item.id)
       );
 
-      const cardData = {
+      const card: DailyFocusCard = {
+        id: existingCard?.id ?? crypto.randomUUID(),
         date: getTodayDate(),
         items: selectedItems,
         meta: {
@@ -74,13 +75,10 @@ export function PlanningWizard({
           energyBudget,
           successMetric,
         },
+        reflection: existingCard?.reflection,
       };
 
-      if (existingCard) {
-        return apiClient.updateFocusCard(existingCard.id, cardData);
-      } else {
-        return apiClient.createFocusCard(cardData);
-      }
+      return apiClient.saveFocusCard(card);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['focus'] });

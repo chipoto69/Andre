@@ -1,43 +1,53 @@
-# Delivery Plan
+# Delivery Roadmap (Q1 2026)
 
-## Phase 0 — Foundations (Week 0-1)
-- Finalize domain models and API contracts.
-- Implement SQLite persistence layer with migration scaffolding.
-- Establish automated formatting, linting, and testing pipelines.
-- Create skeleton Swift modules and integrate with shared domain schemas.
+This roadmap reflects the current codebase reality and prioritises the highest-risk gaps observed in the latest audit.
+It supersedes the earlier phase-based outline.
 
-## Phase 1 — Core Lists (Week 2-4)
-- CRUD endpoints for Todo, Watch, Later lists.
-- Sync tokens + diff endpoints for clients.
-- iOS local store + list management views (UI agent to style).
-- Seed structured procrastination heuristics (e.g., task duration, energy tags).
+---
 
-## Phase 2 — Rituals (Week 5-7)
-- Nightly focus card generator + manual overrides.
-- Anti-Todo logging endpoints and timeline view wiring.
-- Notification scheduling (local iOS notifications, email via worker).
-- Analytics snapshots (completed vs planned delta, streaks).
+## 0. Security & Platform Foundations (Blocking)
+| Area | Goal | Tasks | Ownership |
+|---|---|---|---|
+| **Backend auth** | Protect every API call with authenticated, user-scoped access. | - Introduce session/token validation middleware.<br>- Add `user_id` columns to `list_items`, `focus_cards`, `anti_todo_entries`.<br>- Update repositories & routes to enforce per-user filtering.<br>- Provide local dev auth shim for agents. | Backend |
+| **Schema management** | Enable safe DB evolution. | - Adopt a migration tool (e.g., Drizzle/Prisma).<br>- Create baseline migration for existing tables.<br>- Wire migrations into CI/startup scripts. | Backend / Infra |
+| **Environment config** | Align service URLs + credentials across apps. | - Replace hardcoded `localhost:3000/3333` with environment-driven config for API, web, and iOS.<br>- Document `.env` samples for each surface.<br>- Ensure dev/test/prod configs live in source control templates. | Backend + Web + iOS |
 
-## Phase 3 — Intelligence (Week 8-10)
-- Enrich suggestion engine with calendar integration (read-only).
-- Adaptive heuristics for re-ordering watch list follow-ups.
-- Machine-learned prioritization backlog (data capture only).
-- User settings for focus windows, energy states, and reminders.
+---
 
-## Phase 4 — Polish & Launch (Week 11-12)
-- QA, load testing, and accessibility pass.
-- Beta onboarding flows, guided tutorials.
-- Production infrastructure (managed Postgres, Vercel/Render deployment).
-- App Store/TestFlight readiness; PWA packaging for web.
+## 1. Contract Alignment & Data Integrity
+| Area | Goal | Tasks | Ownership |
+|---|---|---|---|
+| **API ⇄ clients** | Ensure all transports speak the same language. | - Update backend focus + anti-todo routes to support REST resources (`/v1/focus-card`, `/v1/anti-todo?date=`) with canonical responses.<br>- Patch web `api-client.ts` to match server endpoints (board, focus card, anti-todo, suggestions).<br>- Update iOS `SyncService` & DTOs to reuse server responses for round trips (create/update list items, anti-todo logging).<br>- Add contract tests (Vitest + Playwright/Swift tests) covering these flows. | Backend / Web / iOS |
+| **Optimistic locking** | Prevent silent overwrites when multiple devices edit. | - Add `version`/`updated_at` columns server-side.<br>- Require version check on update/delete routes (409 on mismatch).<br>- Surface conflict errors nicely in iOS + web UI. | Backend (+ clients) |
 
-## Workstreams & ownership
-- **Product & Design**: Ritual blueprint, user research (collab with FE/UI agent).
-- **iOS**: SwiftUI client, offline cache, background tasks, app intents.
-- **Web**: Frontend implementation (deferred to FE/UI agent).
-- **API/Backend**: services/api, background workers, persistence.
-- **Infra/DevEx**: CI/CD, observability, release automation.
+---
 
-## Cadence
-- Weekly planning review anchored to the 3-list philosophy.
-- Bi-weekly demos featuring focus card flow, Anti-Todo celebrations.
-- Monthly retro across iOS + web + backend squads.
+## 2. Offline & Persistence Readiness
+| Area | Goal | Tasks | Ownership |
+|---|---|---|---|
+| **iOS persistence** | Ship SwiftData-backed offline cache end to end. | - Finalise SwiftData entities + mappers (ListItemEntity, FocusCardEntity, AntiTodoEntryEntity, SyncQueueOperationEntity).<br>- Initialise `OfflineQueueProcessor` after onboarding; tie into `NetworkMonitor`.<br>- Add retry/backoff (already scaffolded) and confirm queue drains.<br>- Replace `fatalError` with recoverable initialisation errors + user messaging.<br>- Write unit tests for `LocalStore` and queue processor. | iOS |
+| **Web offline mode** | Activate IndexedDB cache & sync queue. | - Hook `db.ts` into React Query fetch/mutation flows.<br>- Persist board/focus/anti-todo locally, fall back on cached data when offline.<br>- Flush queued mutations once network returns.<br>- Add integration tests (Vitest/Playwright) to validate offline/online transitions. | Web |
+
+---
+
+## 3. UX Polish & Feature Completeness
+| Area | Goal | Tasks | Ownership |
+|---|---|---|---|
+| **Suggestions** | Make structured procrastination usable. | - Render `/v1/suggestions/structured-procrastination` results in iOS & web (view models already scaffolded).<br>- Track dismissal/acceptance metrics (backend events TBD). | Web + iOS + Backend |
+| **Planning flows** | Smooth journey from list triage → focus card → wins. | - iOS: break `AndreApp.swift` into modular screens & inject view models.<br>- Web: ensure Planning Wizard shares state with lists and pre-selects planning items.<br>- Add friendly empty/error states and toasts for failures. | iOS + Web |
+| **Theming & accessibility** | Support light mode + accessibility commitments. | - Replace hardcoded dark theme with system-aware theming (web & iOS).<br>- Audit components for contrast/keyboard navigation.<br>- Add basic accessibility tests (web) & VoiceOver pass (iOS). | Web + iOS |
+
+---
+
+## 4. Quality Engineering
+| Area | Goal | Tasks | Ownership |
+|---|---|---|---|
+| **Automated tests** | Prevent regressions as agents iterate. | - Backend: expand Vitest coverage to route-level tests (lists/focus/anti-todo/suggestions).<br>- Web: add component + integration tests for `lists`, `focus`, `wins` pages (React Testing Library + Playwright).<br>- iOS: add unit tests for view models + snapshot tests for key views. | Backend / Web / iOS |
+| **CI/CD** | Catch issues early. | - Configure GitHub Actions (or preferred runner) for lint/test/build per surface.<br>- Add branch protection requiring tests before merge. | Infra / DevEx |
+
+---
+
+## Cadence & Communication
+- **Weekly sync**: review roadmap progress, unblock dependencies, recalibrate priorities.
+- **Bi-weekly demo**: showcase end-to-end flows (lists → focus → wins, offline stories, suggestions).
+- **Monthly retro**: cross-surface review of stability, developer experience, and user feedback.

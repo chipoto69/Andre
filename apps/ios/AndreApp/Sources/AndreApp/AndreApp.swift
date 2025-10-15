@@ -5,6 +5,7 @@ import SwiftUI
 /// Shows onboarding for first-time users, then transitions to main app experience.
 public struct AndreApp: View {
     @State private var hasCompletedOnboarding = UserDefaults.standard.hasCompletedOnboarding
+    @State private var offlineQueueProcessor: OfflineQueueProcessor?
 
     public init() {}
 
@@ -18,6 +19,16 @@ public struct AndreApp: View {
                     UserDefaults.standard.hasCompletedOnboarding = true
                     hasCompletedOnboarding = true
                 }
+            }
+        }
+        .task {
+            if offlineQueueProcessor == nil {
+                let processor = OfflineQueueProcessor(
+                    localStore: LocalStore.shared,
+                    networkMonitor: NetworkMonitor.shared
+                )
+                processor.start()
+                offlineQueueProcessor = processor
             }
         }
     }
@@ -49,7 +60,7 @@ public struct AndreRootView: View {
             StructuredProcrastinationView()
                 .tag(Tab.suggestions)
                 .tabItem {
-                    Label("Switch", systemImage: "arrow.triangle.branch")
+                    Label("Suggestions", systemImage: "arrow.triangle.branch")
                 }
 
             AntiTodoViewEnhanced()
@@ -72,27 +83,45 @@ enum Tab {
 // MARK: - Enhanced List Board View
 
 /// Enhanced three-list board with proper design system integration.
+/// Includes gesture-first UX with floating action button and pull-down Quick Capture.
 public struct ListBoardViewEnhanced: View {
     @State private var viewModel = ListBoardViewModel()
     @State private var showQuickCapture = false
     @State private var showPlanningWizard = false
+    @State private var pullDownOffset: CGFloat = 0
 
     public init() {}
 
     public var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    LoadingIndicator(
-                        style: .pulse,
-                        message: "Loading your lists..."
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    listBoardContent
+            ZStack {
+                // Main content
+                Group {
+                    if viewModel.isLoading {
+                        LoadingIndicator(
+                            style: .pulse,
+                            message: "Loading your lists..."
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        listBoardContent
+                    }
+                }
+                .background(Color.backgroundPrimary)
+
+                // Floating Action Button (FAB) for Quick Capture
+                if !viewModel.isSelectingForPlanning {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            quickCaptureFAB
+                                .padding(.trailing, Spacing.lg)
+                                .padding(.bottom, Spacing.lg)
+                        }
+                    }
                 }
             }
-            .background(Color.backgroundPrimary)
             .navigationTitle(viewModel.isSelectingForPlanning ? "Select Items" : "Three Lists")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -127,12 +156,11 @@ public struct ListBoardViewEnhanced: View {
                 }
             }
             .sheet(isPresented: $showQuickCapture) {
-                QuickCaptureSheet(viewModel: viewModel)
+                SmartQuickCaptureSheet(viewModel: viewModel)
             }
             .sheet(isPresented: $showPlanningWizard) {
-                PlanningWizardView(
+                PlanningWizard2View(
                     viewModel: FocusCardViewModel(),
-                    preSelectedItems: viewModel.getSelectedItems(),
                     onComplete: {
                         viewModel.togglePlanningMode()
                         showPlanningWizard = false
@@ -146,6 +174,34 @@ public struct ListBoardViewEnhanced: View {
                 await viewModel.loadBoard()
             }
         }
+    }
+
+    @ViewBuilder
+    private var quickCaptureFAB: some View {
+        Button(action: {
+            showQuickCapture = true
+            // Haptic feedback
+            #if os(iOS)
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+            #endif
+        }) {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "plus")
+                    .font(.system(size: 18, weight: .semibold))
+                Text("Quick Add")
+                    .font(.labelMedium.weight(.semibold))
+            }
+            .foregroundColor(.brandBlack)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.vertical, Spacing.md)
+            .background(
+                Capsule()
+                    .fill(Color.brandCyan)
+                    .shadow(color: Color.brandCyan.opacity(0.3), radius: 12, x: 0, y: 4)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
@@ -307,9 +363,27 @@ public struct ListBoardViewEnhanced: View {
                 Text("No \(listType.displayName) items")
                     .font(.bodySmall)
                     .foregroundColor(.textSecondary)
+
+                Text(emptyStateHint(for: listType))
+                    .font(.labelSmall)
+                    .foregroundColor(.textTertiary)
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
             .padding(Spacing.lg)
+        }
+    }
+
+    private func emptyStateHint(for listType: ListItem.ListType) -> String {
+        switch listType {
+        case .todo:
+            return "Add tasks you're committing to complete"
+        case .watch:
+            return "Track items waiting on others or future events"
+        case .later:
+            return "Capture ideas you'll tackle when ready"
+        case .antiTodo:
+            return "Log your wins as they happen"
         }
     }
 
@@ -340,8 +414,14 @@ public struct ListBoardViewEnhanced: View {
     }
 }
 
-// MARK: - List Item Row
+// MARK: - List Item Row with Gesture Support
 
+/// iOS 26 compliant list item row with swipe gestures.
+///
+/// Gestures:
+/// - Swipe right → Complete/uncomplete item
+/// - Swipe left → Delete item
+/// - Includes haptic feedback and smooth animations
 public struct ListItemRow: View {
     let item: ListItem
     let isSelectionMode: Bool
@@ -349,6 +429,9 @@ public struct ListItemRow: View {
     let onToggleComplete: () -> Void
     let onDelete: () -> Void
     let onToggleSelection: () -> Void
+
+    @State private var offset: CGFloat = 0
+    @State private var showingDeleteConfirmation = false
 
     public init(
         item: ListItem,
@@ -367,6 +450,84 @@ public struct ListItemRow: View {
     }
 
     public var body: some View {
+        ZStack {
+            // Swipe action backgrounds
+            if !isSelectionMode {
+                swipeActionBackgrounds
+            }
+
+            // Main content
+            itemContent
+                .offset(x: offset)
+                .gesture(
+                    isSelectionMode ? nil : DragGesture()
+                        .onChanged { gesture in
+                            // Allow swiping in both directions
+                            offset = gesture.translation.width
+                        }
+                        .onEnded { gesture in
+                            handleSwipeEnd(translation: gesture.translation.width)
+                        }
+                )
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: offset)
+        }
+        .confirmationDialog(
+            "Delete this item?",
+            isPresented: $showingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                onDelete()
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    @ViewBuilder
+    private var swipeActionBackgrounds: some View {
+        GeometryReader { geometry in
+            HStack {
+                // Left side (complete action) - Swipe right reveals this
+                if offset > 0 {
+                    HStack {
+                        Image(systemName: item.status == .completed ? "arrow.uturn.backward.circle.fill" : "checkmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white)
+
+                        Text(item.status == .completed ? "Undo" : "Complete")
+                            .font(.labelMedium.weight(.semibold))
+                            .foregroundColor(.white)
+                    }
+                    .frame(width: max(0, offset))
+                    .frame(maxHeight: .infinity)
+                    .background(item.status == .completed ? Color.brandCyan : Color.statusSuccess)
+                    .cornerRadius(LayoutSize.cornerRadiusMedium)
+                }
+
+                Spacer()
+
+                // Right side (delete action) - Swipe left reveals this
+                if offset < 0 {
+                    HStack {
+                        Text("Delete")
+                            .font(.labelMedium.weight(.semibold))
+                            .foregroundColor(.white)
+
+                        Image(systemName: "trash.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white)
+                    }
+                    .frame(width: max(0, -offset))
+                    .frame(maxHeight: .infinity)
+                    .background(Color.statusError)
+                    .cornerRadius(LayoutSize.cornerRadiusMedium)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var itemContent: some View {
         AndreCard(style: item.status == .completed ? .glass : .default) {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 // Header
@@ -379,7 +540,14 @@ public struct ListItemRow: View {
                         }
                         .buttonStyle(.plain)
                     } else {
-                        Button(action: onToggleComplete) {
+                        Button(action: {
+                            onToggleComplete()
+                            // Haptic feedback
+                            #if os(iOS)
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.success)
+                            #endif
+                        }) {
                             Image(systemName: item.status == .completed ? "checkmark.circle.fill" : "circle")
                                 .font(.system(size: 20))
                                 .foregroundColor(item.status == .completed ? .statusSuccess : .textTertiary)
@@ -404,7 +572,9 @@ public struct ListItemRow: View {
                     Spacer()
 
                     if !isSelectionMode {
-                        Button(action: onDelete) {
+                        Button(action: {
+                            showingDeleteConfirmation = true
+                        }) {
                             Image(systemName: "trash")
                                 .font(.system(size: 14))
                                 .foregroundColor(.statusError)
@@ -437,232 +607,31 @@ public struct ListItemRow: View {
             }
         }
     }
-}
 
-// MARK: - Quick Capture Sheet
+    private func handleSwipeEnd(translation: CGFloat) {
+        let swipeThreshold: CGFloat = 80
 
-public struct QuickCaptureSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Bindable var viewModel: ListBoardViewModel
-
-    @State private var title = ""
-    @State private var notes = ""
-    @State private var selectedListType: ListItem.ListType = .todo
-    @State private var dueDate: Date?
-    @State private var showDatePicker = false
-    @State private var tags: [String] = []
-    @State private var newTag = ""
-
-    public init(viewModel: ListBoardViewModel) {
-        self.viewModel = viewModel
-    }
-
-    public var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Spacing.lg) {
-                    // Title
-                    AndreTextField(
-                        "Title",
-                        placeholder: "What needs to be done?",
-                        icon: "text.alignleft",
-                        text: $title,
-                        validationState: title.isEmpty ? .normal : .success
-                    )
-
-                    // List type selector
-                    listTypeSelector
-
-                    // Notes
-                    AndreTextArea(
-                        "Notes",
-                        placeholder: "Add details...",
-                        text: $notes,
-                        minHeight: 100
-                    )
-
-                    // Due date
-                    dueDateSection
-
-                    // Tags
-                    tagsSection
-                }
-                .padding(Spacing.screenPadding)
-            }
-            .background(Color.backgroundPrimary)
-            .navigationTitle("Quick Capture")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add") {
-                        Task {
-                            await addItem()
-                        }
-                    }
-                    .disabled(title.isEmpty)
-                }
-            }
+        if translation > swipeThreshold {
+            // Swipe right → Complete/Uncomplete
+            triggerHaptic(.success)
+            onToggleComplete()
+            offset = 0
+        } else if translation < -swipeThreshold {
+            // Swipe left → Delete
+            triggerHaptic(.warning)
+            showingDeleteConfirmation = true
+            offset = 0
+        } else {
+            // Didn't swipe far enough → Reset
+            offset = 0
         }
     }
 
-    @ViewBuilder
-    private var listTypeSelector: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("List")
-                .font(.labelMedium)
-                .foregroundColor(.textSecondary)
-
-            HStack(spacing: Spacing.sm) {
-                ForEach([ListItem.ListType.todo, .watch, .later], id: \.self) { type in
-                    Button(action: {
-                        withAnimation {
-                            selectedListType = type
-                        }
-                    }) {
-                        VStack(spacing: Spacing.xs) {
-                            Image(systemName: listTypeIcon(type))
-                                .font(.system(size: 20))
-
-                            Text(type.displayName)
-                                .font(.labelSmall)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(Spacing.md)
-                        .foregroundColor(selectedListType == type ? .brandBlack : listTypeColor(type))
-                        .background(selectedListType == type ? listTypeColor(type) : Color.backgroundSecondary)
-                        .cornerRadius(LayoutSize.cornerRadiusMedium)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var dueDateSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack {
-                Text("Due Date")
-                    .font(.labelMedium)
-                    .foregroundColor(.textSecondary)
-
-                Spacer()
-
-                if dueDate != nil {
-                    Button("Clear") {
-                        dueDate = nil
-                    }
-                    .font(.labelSmall)
-                    .foregroundColor(.brandCyan)
-                }
-            }
-
-            if let date = dueDate {
-                Text(date.formatted(date: .long, time: .omitted))
-                    .font(.bodyMedium)
-                    .foregroundColor(.textPrimary)
-                    .padding(Spacing.md)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.backgroundSecondary)
-                    .cornerRadius(LayoutSize.cornerRadiusMedium)
-                    .onTapGesture {
-                        showDatePicker = true
-                    }
-            } else {
-                Button(action: { showDatePicker = true }) {
-                    HStack {
-                        Image(systemName: "calendar.badge.plus")
-                        Text("Set due date")
-                            .font(.bodyMedium)
-                    }
-                    .foregroundColor(.brandCyan)
-                    .padding(Spacing.md)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.backgroundSecondary)
-                    .cornerRadius(LayoutSize.cornerRadiusMedium)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .sheet(isPresented: $showDatePicker) {
-            DatePicker(
-                "Due Date",
-                selection: Binding(get: { dueDate ?? Date() }, set: { dueDate = $0 }),
-                displayedComponents: .date
-            )
-            .datePickerStyle(.graphical)
-            .padding()
-            .presentationDetents([.medium])
-        }
-    }
-
-    @ViewBuilder
-    private var tagsSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Tags")
-                .font(.labelMedium)
-                .foregroundColor(.textSecondary)
-
-            if !tags.isEmpty {
-                AndreTagGroup(
-                    tags: tags,
-                    style: .outlined,
-                    onRemove: { tag in
-                        tags.removeAll { $0 == tag }
-                    }
-                )
-            }
-
-            HStack {
-                AndreTextField(
-                    placeholder: "Add tag...",
-                    text: $newTag
-                )
-
-                AndreButton.primary("Add", size: .small) {
-                    if !newTag.isEmpty {
-                        tags.append(newTag)
-                        newTag = ""
-                    }
-                }
-            }
-        }
-    }
-
-    private func listTypeIcon(_ type: ListItem.ListType) -> String {
-        switch type {
-        case .todo: return "circle"
-        case .watch: return "eye"
-        case .later: return "clock"
-        case .antiTodo: return "sparkles"
-        }
-    }
-
-    private func listTypeColor(_ type: ListItem.ListType) -> Color {
-        switch type {
-        case .todo: return .listTodo
-        case .watch: return .listWatch
-        case .later: return .listLater
-        case .antiTodo: return .listAntiTodo
-        }
-    }
-
-    private func addItem() async {
-        await viewModel.addItem(
-            title: title,
-            listType: selectedListType,
-            notes: notes.isEmpty ? nil : notes,
-            dueAt: dueDate,
-            tags: tags
-        )
-
-        dismiss()
+    private func triggerHaptic(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        #if os(iOS)
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(type)
+        #endif
     }
 }
 
@@ -776,14 +745,38 @@ public struct AntiTodoViewEnhanced: View {
                     .font(.system(size: 48))
                     .foregroundColor(.brandCyan.opacity(0.5))
 
-                Text("No wins yet today")
-                    .font(.bodyMedium)
-                    .foregroundColor(.textSecondary)
+                VStack(spacing: Spacing.xs) {
+                    Text("No wins yet today")
+                        .font(.bodyMedium)
+                        .foregroundColor(.textSecondary)
 
-                Text("Log your accomplishments as they happen")
-                    .font(.bodySmall)
-                    .foregroundColor(.textTertiary)
-                    .multilineTextAlignment(.center)
+                    Text("Log your accomplishments as they happen")
+                        .font(.bodySmall)
+                        .foregroundColor(.textTertiary)
+                        .multilineTextAlignment(.center)
+                }
+
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Examples:")
+                        .font(.labelSmall.weight(.semibold))
+                        .foregroundColor(.textSecondary)
+
+                    Text("• Finished the quarterly report")
+                        .font(.labelSmall)
+                        .foregroundColor(.textTertiary)
+
+                    Text("• Had a productive 1:1 with Sarah")
+                        .font(.labelSmall)
+                        .foregroundColor(.textTertiary)
+
+                    Text("• Fixed that annoying bug")
+                        .font(.labelSmall)
+                        .foregroundColor(.textTertiary)
+                }
+                .padding(Spacing.md)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.backgroundSecondary.opacity(0.5))
+                .cornerRadius(LayoutSize.cornerRadiusMedium)
             }
             .frame(maxWidth: .infinity)
             .padding(Spacing.xl)
