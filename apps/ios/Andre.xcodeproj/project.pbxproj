@@ -1,0 +1,512 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		005B5B6550EB8839FB31A7BD /* AndreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D88F35AA62D4086AE7674 /* AndreTests.swift */; };
+		433A7E35DFEC455A9519065D /* AndreApp in Frameworks */ = {isa = PBXBuildFile; productRef = 67F107B07286D991D45434CC /* AndreApp */; };
+		52DA9D661AFE9932FDE31DE6 /* AndreApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C4FE421958F4CF63D8CB98 /* AndreApp.swift */; };
+		61A1ED66FF752476BEB70DDA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99CBA0BDC1F3D546215A09A5 /* Assets.xcassets */; };
+		990656349680523BA6A2B657 /* AndreApp in Frameworks */ = {isa = PBXBuildFile; productRef = EA6972D845EC1619862B8C56 /* AndreApp */; };
+		B688B539F126AEDBBA017025 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3D482429A520D6D880DEDDC8 /* Preview Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		15F043285BF4ECF90C73C56C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0598006BB2C250ED7D542A91 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E5AC2726DFD8594F1C6BEDC8;
+			remoteInfo = Andre;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		3D482429A520D6D880DEDDC8 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		4004C9FCDC8EDD820362D020 /* Andre.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Andre.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F459B29907220EB23A71D9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		99CBA0BDC1F3D546215A09A5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AB072E3FE090A98DA173B566 /* AndreTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AndreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7C4FE421958F4CF63D8CB98 /* AndreApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AndreApp.swift; sourceTree = "<group>"; };
+		E34A8B7AA4A15D84DD27ABD6 /* AndreApp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AndreApp; path = AndreApp; sourceTree = SOURCE_ROOT; };
+		F00D88F35AA62D4086AE7674 /* AndreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AndreTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D6E4D0FDEA221E0D90DCCF3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				433A7E35DFEC455A9519065D /* AndreApp in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5C30E16E6D2E22882AE2FD8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				990656349680523BA6A2B657 /* AndreApp in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1E0C129CF08392547D672537 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				3D482429A520D6D880DEDDC8 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		21A92D15FC8F81A86AB5AC7D /* AndreTests */ = {
+			isa = PBXGroup;
+			children = (
+				F00D88F35AA62D4086AE7674 /* AndreTests.swift */,
+			);
+			path = AndreTests;
+			sourceTree = "<group>";
+		};
+		31CCC9F9A40D36FCD27CF2D2 = {
+			isa = PBXGroup;
+			children = (
+				63C631CCD68F03F953D68F99 /* Andre */,
+				21A92D15FC8F81A86AB5AC7D /* AndreTests */,
+				882E5A34D0D11619ED2B613F /* Packages */,
+				EF0D7DD26813CE5A3982F76A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		63C631CCD68F03F953D68F99 /* Andre */ = {
+			isa = PBXGroup;
+			children = (
+				C7C4FE421958F4CF63D8CB98 /* AndreApp.swift */,
+				99CBA0BDC1F3D546215A09A5 /* Assets.xcassets */,
+				8F459B29907220EB23A71D9B /* Info.plist */,
+				1E0C129CF08392547D672537 /* Preview Content */,
+			);
+			path = Andre;
+			sourceTree = "<group>";
+		};
+		882E5A34D0D11619ED2B613F /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				E34A8B7AA4A15D84DD27ABD6 /* AndreApp */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		EF0D7DD26813CE5A3982F76A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4004C9FCDC8EDD820362D020 /* Andre.app */,
+				AB072E3FE090A98DA173B566 /* AndreTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5CBBE359B0C4BE96A1BE5769 /* AndreTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2C6AF87F03A43B858B49FC41 /* Build configuration list for PBXNativeTarget "AndreTests" */;
+			buildPhases = (
+				8233116A59FDF2FF3D43EC38 /* Sources */,
+				8D6E4D0FDEA221E0D90DCCF3 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				80BD0A789C164A2D8D5CFE20 /* PBXTargetDependency */,
+			);
+			name = AndreTests;
+			packageProductDependencies = (
+				67F107B07286D991D45434CC /* AndreApp */,
+			);
+			productName = AndreTests;
+			productReference = AB072E3FE090A98DA173B566 /* AndreTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E5AC2726DFD8594F1C6BEDC8 /* Andre */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EDCC7BFF31702993BF849925 /* Build configuration list for PBXNativeTarget "Andre" */;
+			buildPhases = (
+				6459AF16FEB003133135D3BF /* SwiftLint */,
+				2B7A2BA82927B7FD9690B068 /* Sources */,
+				967A7A48DFFB69515CC6E445 /* Resources */,
+				C5C30E16E6D2E22882AE2FD8 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Andre;
+			packageProductDependencies = (
+				EA6972D845EC1619862B8C56 /* AndreApp */,
+			);
+			productName = Andre;
+			productReference = 4004C9FCDC8EDD820362D020 /* Andre.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0598006BB2C250ED7D542A91 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					E5AC2726DFD8594F1C6BEDC8 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = DB67BBB9AFB49F91E24E7AA5 /* Build configuration list for PBXProject "Andre" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 31CCC9F9A40D36FCD27CF2D2;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1133FA1C253A67947A5DB6DE /* XCLocalSwiftPackageReference "AndreApp" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E5AC2726DFD8594F1C6BEDC8 /* Andre */,
+				5CBBE359B0C4BE96A1BE5769 /* AndreTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		967A7A48DFFB69515CC6E445 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				61A1ED66FF752476BEB70DDA /* Assets.xcassets in Resources */,
+				B688B539F126AEDBBA017025 /* Preview Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		6459AF16FEB003133135D3BF /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# SwiftLint\nif which swiftlint >/dev/null; then\n  swiftlint\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2B7A2BA82927B7FD9690B068 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				52DA9D661AFE9932FDE31DE6 /* AndreApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8233116A59FDF2FF3D43EC38 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				005B5B6550EB8839FB31A7BD /* AndreTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		80BD0A789C164A2D8D5CFE20 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E5AC2726DFD8594F1C6BEDC8 /* Andre */;
+			targetProxy = 15F043285BF4ECF90C73C56C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		020BEEB692713419246346D7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "\"Andre/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = Andre/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andre.app;
+				PRODUCT_NAME = Andre;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1F64CDC8D0DA8A2D4EC25815 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9BA3C8A658E18AC80B91AA4C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andre.AndreTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Andre.app/Andre";
+			};
+			name = Debug;
+		};
+		BFB9345C461AD482CC585026 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "\"Andre/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = Andre/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andre.app;
+				PRODUCT_NAME = Andre;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C5D0046C11AB10A1C1A72A4C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andre.AndreTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Andre.app/Andre";
+			};
+			name = Release;
+		};
+		DFC34AC45AB4D5C796676A4F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2C6AF87F03A43B858B49FC41 /* Build configuration list for PBXNativeTarget "AndreTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9BA3C8A658E18AC80B91AA4C /* Debug */,
+				C5D0046C11AB10A1C1A72A4C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DB67BBB9AFB49F91E24E7AA5 /* Build configuration list for PBXProject "Andre" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFC34AC45AB4D5C796676A4F /* Debug */,
+				1F64CDC8D0DA8A2D4EC25815 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EDCC7BFF31702993BF849925 /* Build configuration list for PBXNativeTarget "Andre" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				020BEEB692713419246346D7 /* Debug */,
+				BFB9345C461AD482CC585026 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		1133FA1C253A67947A5DB6DE /* XCLocalSwiftPackageReference "AndreApp" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = AndreApp;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		67F107B07286D991D45434CC /* AndreApp */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AndreApp;
+		};
+		EA6972D845EC1619862B8C56 /* AndreApp */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AndreApp;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 0598006BB2C250ED7D542A91 /* Project object */;
+}
