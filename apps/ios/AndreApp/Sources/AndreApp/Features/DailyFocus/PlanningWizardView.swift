@@ -11,6 +11,9 @@ public struct PlanningWizardView: View {
     @State private var availableItems: [ListItem] = []
     @State private var isLoadingItems = false
 
+    private let preSelectedItems: [ListItem]?
+    private let onComplete: (() -> Void)?
+
     enum Step: Int, CaseIterable {
         case selectItems
         case setTheme
@@ -36,8 +39,14 @@ public struct PlanningWizardView: View {
         }
     }
 
-    public init(viewModel: FocusCardViewModel) {
+    public init(
+        viewModel: FocusCardViewModel,
+        preSelectedItems: [ListItem]? = nil,
+        onComplete: (() -> Void)? = nil
+    ) {
         self.viewModel = viewModel
+        self.preSelectedItems = preSelectedItems
+        self.onComplete = onComplete
     }
 
     public var body: some View {
@@ -71,6 +80,12 @@ public struct PlanningWizardView: View {
             }
             .task {
                 await loadAvailableItems()
+
+                // Pre-populate selected items and skip to theme step if provided
+                if let preSelected = preSelectedItems, !preSelected.isEmpty {
+                    viewModel.selectedItems = preSelected
+                    currentStep = .setTheme
+                }
             }
         }
     }
@@ -557,6 +572,7 @@ public struct PlanningWizardView: View {
         )
 
         if viewModel.error == nil {
+            onComplete?()
             dismiss()
         }
     }
@@ -616,5 +632,6 @@ private struct SelectableItemRow: View {
 // MARK: - Preview
 
 #Preview {
-    PlanningWizardView(viewModel: FocusCardViewModel())
+    @Previewable @State var viewModel = FocusCardViewModel()
+    return PlanningWizardView(viewModel: viewModel)
 }
