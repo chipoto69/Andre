@@ -279,7 +279,10 @@ public struct PlanningWizardView: View {
         AndreCard(style: .accent) {
             Button(action: {
                 Task {
-                    await viewModel.generateFocusCardWithAI()
+                    await viewModel.generateFocusCardWithAI(
+                        from: availableItems,
+                        targetDate: planningDate
+                    )
                 }
             }) {
                 HStack {
@@ -300,7 +303,7 @@ public struct PlanningWizardView: View {
 
                     Spacer()
 
-                    if viewModel.isLoading {
+                    if viewModel.isGeneratingAI {
                         LoadingIndicator(style: .circular, size: .small)
                     } else {
                         Image(systemName: "arrow.right")
@@ -309,7 +312,7 @@ public struct PlanningWizardView: View {
                 }
             }
             .buttonStyle(.plain)
-            .disabled(viewModel.isLoading)
+            .disabled(viewModel.isGeneratingAI || availableItems.isEmpty)
         }
     }
 
@@ -550,7 +553,7 @@ public struct PlanningWizardView: View {
                     viewModel.isLoading ? "Creating..." : "Create Focus Card",
                     icon: "checkmark",
                     isLoading: viewModel.isLoading,
-                    isDisabled: !canProceed
+                    isDisabled: !canProceed || viewModel.isGeneratingAI
                 ) {
                     Task {
                         await createFocusCard()
@@ -560,7 +563,7 @@ public struct PlanningWizardView: View {
                 AndreButton.primary(
                     "Continue",
                     icon: "arrow.right",
-                    isDisabled: !canProceed
+                    isDisabled: !canProceed || viewModel.isGeneratingAI
                 ) {
                     withAnimation {
                         goToNextStep()
@@ -583,13 +586,16 @@ public struct PlanningWizardView: View {
     // MARK: - Actions
 
     private func loadAvailableItems() async {
-        isLoadingItems = true
+        await MainActor.run {
+            isLoadingItems = true
+        }
 
-        // TODO: Load from LocalStore
-        // For now, using placeholder data
-        availableItems = ListItem.placeholderItems
+        let items = await viewModel.loadPlanningItems()
 
-        isLoadingItems = false
+        await MainActor.run {
+            availableItems = items.isEmpty ? ListItem.placeholderItems : items
+            isLoadingItems = false
+        }
     }
 
     private func goToNextStep() {
@@ -603,10 +609,8 @@ public struct PlanningWizardView: View {
     }
 
     private func createFocusCard() async {
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-
         await viewModel.createFocusCard(
-            date: tomorrow,
+            date: planningDate,
             items: viewModel.selectedItems,
             theme: viewModel.theme,
             energyBudget: viewModel.energyBudget,
@@ -624,12 +628,16 @@ public struct PlanningWizardView: View {
         case .selectItems:
             return !viewModel.selectedItems.isEmpty && viewModel.selectedItems.count <= 5
         case .setTheme:
-            return !viewModel.theme.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return !viewModel.theme.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isGeneratingAI
         case .defineSuccess:
             return !viewModel.successMetric.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .review:
             return viewModel.canCreateCard
         }
+    }
+
+    private var planningDate: Date {
+        Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
     }
 }
 
