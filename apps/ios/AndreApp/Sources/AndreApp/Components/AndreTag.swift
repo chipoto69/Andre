@@ -214,8 +214,10 @@ private struct FlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(in: proposal.replacingUnspecifiedDimensions().width, subviews: subviews, spacing: spacing)
-        return result.size
+        let availableWidth = proposal.width ?? .greatestFiniteMagnitude
+        let result = FlowResult(in: availableWidth, subviews: subviews, spacing: spacing)
+        let width = proposal.width ?? result.contentWidth
+        return CGSize(width: width, height: result.size.height)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
@@ -228,16 +230,19 @@ private struct FlowLayout: Layout {
     struct FlowResult {
         var size: CGSize = .zero
         var positions: [CGPoint] = []
+        var contentWidth: CGFloat = 0
 
         init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
             var currentX: CGFloat = 0
             var currentY: CGFloat = 0
             var lineHeight: CGFloat = 0
+            var maxLineWidth: CGFloat = 0
 
             for subview in subviews {
                 let size = subview.sizeThatFits(.unspecified)
 
-                if currentX + size.width > maxWidth && currentX > 0 {
+                if currentX > 0 && currentX + size.width > maxWidth {
+                    maxLineWidth = max(maxLineWidth, currentX - spacing)
                     currentX = 0
                     currentY += lineHeight + spacing
                     lineHeight = 0
@@ -248,7 +253,12 @@ private struct FlowLayout: Layout {
                 lineHeight = max(lineHeight, size.height)
             }
 
-            self.size = CGSize(width: maxWidth, height: currentY + lineHeight)
+            if currentX > 0 {
+                maxLineWidth = max(maxLineWidth, currentX - spacing)
+            }
+
+            self.size = CGSize(width: min(maxWidth, maxLineWidth), height: currentY + lineHeight)
+            self.contentWidth = maxLineWidth
         }
     }
 }

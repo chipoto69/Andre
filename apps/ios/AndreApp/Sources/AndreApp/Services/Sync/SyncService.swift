@@ -5,6 +5,7 @@ public final class SyncService {
     public enum SyncError: Error {
         case httpStatus(Int)
         case invalidURL
+        case invalidData
     }
 
     public struct Config {
@@ -19,7 +20,7 @@ public final class SyncService {
 
     public static let shared = SyncService(
         config: Config(
-            baseURL: URL(string: "http://localhost:8080")!,
+            baseURL: URL(string: "http://localhost:3333")!,
             authTokenProvider: { nil }
         )
     )
@@ -28,6 +29,12 @@ public final class SyncService {
     private let config: Config
     private let decoder = JSONDecoder()
     private let encoder = JSONEncoder()
+    private let isoDateTimeFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
     private let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .iso8601)
@@ -43,31 +50,26 @@ public final class SyncService {
     ) {
         self.config = config
         self.session = session
-        decoder.dateDecodingStrategy = .iso8601
-        encoder.dateEncodingStrategy = .iso8601
     }
 
     public func fetchListBoard() async throws -> ListBoard {
         let request = try makeRequest(path: "/v1/lists/sync", method: "GET")
         let data = try await data(for: request)
-        return try decoder.decode(ListBoard.self, from: data)
-    }
-
-    public func pushBoard(_ board: ListBoard) async throws {
-        var request = try makeRequest(path: "/v1/lists/sync", method: "PUT")
-        request.httpBody = try encoder.encode(board)
-        _ = try await data(for: request)
+        let dto = try decoder.decode(BoardDTO.self, from: data)
+        return dto.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter)
     }
 
     public func createListItem(_ item: ListItem) async throws {
         var request = try makeRequest(path: "/v1/lists", method: "POST")
-        request.httpBody = try encoder.encode(item)
+        let payload = ListItemDTO(item: item, formatter: isoDateTimeFormatter)
+        request.httpBody = try encoder.encode(payload)
         _ = try await data(for: request)
     }
 
     public func updateListItem(_ item: ListItem) async throws {
         var request = try makeRequest(path: "/v1/lists/\(item.id.uuidString)", method: "PUT")
-        request.httpBody = try encoder.encode(item)
+        let payload = ListItemDTO(item: item, formatter: isoDateTimeFormatter)
+        request.httpBody = try encoder.encode(payload)
         _ = try await data(for: request)
     }
 
@@ -77,26 +79,35 @@ public final class SyncService {
     }
 
     public func fetchFocusCard(for date: Date) async throws -> DailyFocusCard {
-        let isoDate = ISO8601DateFormatter().string(from: date)
+        let dayString = dayFormatter.string(from: date)
         let request = try makeRequest(
             path: "/v1/focus-card",
             method: "GET",
-            queryItems: [URLQueryItem(name: "date", value: isoDate)]
+            queryItems: [URLQueryItem(name: "date", value: dayString)]
         )
         let data = try await data(for: request)
-        return try decoder.decode(DailyFocusCard.self, from: data)
+        let dto = try decoder.decode(DailyFocusCardDTO.self, from: data)
+        guard let card = dto.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter) else {
+            throw SyncError.invalidData
+        }
+        return card
     }
 
     public func syncFocusCard(_ card: DailyFocusCard) async throws {
         var request = try makeRequest(path: "/v1/focus-card", method: "PUT")
-        request.httpBody = try encoder.encode(card)
+        let payload = DailyFocusCardDTO(card: card, formatter: isoDateTimeFormatter, dayFormatter: dayFormatter)
+        request.httpBody = try encoder.encode(payload)
         _ = try await data(for: request)
     }
 
     public func generateFocusCard() async throws -> DailyFocusCard {
         let request = try makeRequest(path: "/v1/focus-card/generate", method: "POST")
         let data = try await data(for: request)
-        return try decoder.decode(DailyFocusCard.self, from: data)
+        let dto = try decoder.decode(DailyFocusCardDTO.self, from: data)
+        guard let card = dto.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter) else {
+            throw SyncError.invalidData
+        }
+        return card
     }
 
     public func fetchAntiTodoLog(for date: Date) async throws -> AntiTodoLog {
@@ -107,16 +118,19 @@ public final class SyncService {
             queryItems: [URLQueryItem(name: "date", value: isoDate)]
         )
         let data = try await data(for: request)
-        let entries = try decoder.decode([AntiTodoLog.Entry].self, from: data)
+        let entries = try decoder.decode([AntiTodoEntryDTO].self, from: data)
+            .map { $0.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter) }
         return AntiTodoLog(date: date, entries: entries)
     }
 
     @discardableResult
     public func logAntiTodo(_ entry: AntiTodoLog.Entry) async throws -> AntiTodoLog.Entry {
         var request = try makeRequest(path: "/v1/anti-todo", method: "POST")
-        request.httpBody = try encoder.encode(entry)
+        let payload = AntiTodoEntryDTO(entry: entry, formatter: isoDateTimeFormatter)
+        request.httpBody = try encoder.encode(payload)
         let data = try await data(for: request)
-        return try decoder.decode(AntiTodoLog.Entry.self, from: data)
+        let dto = try decoder.decode(AntiTodoEntryDTO.self, from: data)
+        return dto.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter)
     }
 
     private func makeRequest(
