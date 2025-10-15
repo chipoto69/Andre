@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-md">
@@ -12,18 +14,18 @@ export default function Home() {
           Master focus. Build momentum. Track wins.
         </p>
         <div className="mt-xl flex gap-md">
-          <a
+          <Link
             href="/focus"
             className="rounded-medium bg-accent-primary px-lg py-sm text-body-md font-medium text-brand-black transition-colors hover:bg-accent-primary/90"
           >
             Get Started
-          </a>
-          <a
+          </Link>
+          <Link
             href="/lists"
             className="rounded-medium bg-background-secondary px-lg py-sm text-body-md font-medium text-text-primary transition-colors hover:bg-background-tertiary"
           >
             View Lists
-          </a>
+          </Link>
         </div>
       </main>
     </div>
