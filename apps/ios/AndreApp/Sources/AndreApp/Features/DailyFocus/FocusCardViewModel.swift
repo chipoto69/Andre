@@ -16,6 +16,9 @@ public final class FocusCardViewModel {
     /// Loading state
     public private(set) var isLoading = false
 
+    /// AI generation state
+    public private(set) var isGeneratingAI = false
+
     /// Error state
     public private(set) var error: Error?
 
@@ -170,6 +173,24 @@ public final class FocusCardViewModel {
         selectedItems.contains { $0.id == item.id }
     }
 
+    /// Load available items for planning from local cache and remote sync
+    public func loadPlanningItems() async -> [ListItem] {
+        var items: [ListItem] = []
+
+        if let cachedBoard = await localStore.loadListBoard() {
+            items = planningCandidates(from: cachedBoard)
+        }
+
+        do {
+            let remoteBoard = try await syncService.fetchListBoard()
+            await localStore.cache(board: remoteBoard)
+            return planningCandidates(from: remoteBoard)
+        } catch {
+            print("Failed to refresh planning items: \(error)")
+            return items
+        }
+    }
+
     /// Validate planning inputs
     public var canCreateCard: Bool {
         !selectedItems.isEmpty &&
@@ -212,5 +233,46 @@ public final class FocusCardViewModel {
         }
 
         return "Balance multiple priorities"
+    }
+
+    // MARK: - AI Generation
+
+    /// Generate focus card with AI assistance
+    public func generateFocusCardWithAI(
+        from availableItems: [ListItem],
+        targetDate: Date = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+    ) async {
+        isGeneratingAI = true
+        error = nil
+
+        do {
+            let generated = try await syncService.generateFocusCard(for: Calendar.current.startOfDay(for: targetDate))
+
+            // Pre-populate wizard fields with AI-generated content
+            theme = generated.meta.theme
+            energyBudget = generated.meta.energyBudget
+            successMetric = generated.meta.successMetric
+
+            let generatedIDs = Set(generated.items.map { $0.id })
+            let matchedItems = availableItems.filter { generatedIDs.contains($0.id) }
+            if !matchedItems.isEmpty {
+                selectedItems = matchedItems
+            }
+
+        } catch {
+            self.error = error
+            print("Failed to generate focus card with AI: \(error)")
+        }
+
+        isGeneratingAI = false
+    }
+}
+
+private extension FocusCardViewModel {
+    func planningCandidates(from board: ListBoard) -> [ListItem] {
+        board.columns
+            .filter { $0.listType != .antiTodo }
+            .flatMap { $0.items }
+            .filter { $0.status != .archived }
     }
 }

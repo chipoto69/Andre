@@ -11,6 +11,9 @@ public struct PlanningWizardView: View {
     @State private var availableItems: [ListItem] = []
     @State private var isLoadingItems = false
 
+    private let preSelectedItems: [ListItem]?
+    private let onComplete: (() -> Void)?
+
     enum Step: Int, CaseIterable {
         case selectItems
         case setTheme
@@ -36,8 +39,14 @@ public struct PlanningWizardView: View {
         }
     }
 
-    public init(viewModel: FocusCardViewModel) {
+    public init(
+        viewModel: FocusCardViewModel,
+        preSelectedItems: [ListItem]? = nil,
+        onComplete: (() -> Void)? = nil
+    ) {
         self.viewModel = viewModel
+        self.preSelectedItems = preSelectedItems
+        self.onComplete = onComplete
     }
 
     public var body: some View {
@@ -71,6 +80,12 @@ public struct PlanningWizardView: View {
             }
             .task {
                 await loadAvailableItems()
+
+                // Pre-populate selected items and skip to theme step if provided
+                if let preSelected = preSelectedItems, !preSelected.isEmpty {
+                    viewModel.selectedItems = preSelected
+                    currentStep = .setTheme
+                }
             }
         }
     }
@@ -240,6 +255,9 @@ public struct PlanningWizardView: View {
                 "What's the theme or main focus for tomorrow?"
             )
 
+            // AI Generation Button
+            aiGenerateButton
+
             AndreTextField(
                 "Theme",
                 placeholder: "e.g., Deep work on product launch",
@@ -253,6 +271,48 @@ public struct PlanningWizardView: View {
             }
 
             energyBudgetPicker
+        }
+    }
+
+    @ViewBuilder
+    private var aiGenerateButton: some View {
+        AndreCard(style: .accent) {
+            Button(action: {
+                Task {
+                    await viewModel.generateFocusCardWithAI(
+                        from: availableItems,
+                        targetDate: planningDate
+                    )
+                }
+            }) {
+                HStack {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        HStack(spacing: Spacing.xs) {
+                            Image(systemName: "sparkles")
+                                .foregroundColor(.brandCyan)
+
+                            Text("Generate with AI")
+                                .font(.bodyMedium.weight(.semibold))
+                                .foregroundColor(.textPrimary)
+                        }
+
+                        Text("Let AI suggest theme, energy, and success metric")
+                            .font(.bodySmall)
+                            .foregroundColor(.textSecondary)
+                    }
+
+                    Spacer()
+
+                    if viewModel.isGeneratingAI {
+                        LoadingIndicator(style: .circular, size: .small)
+                    } else {
+                        Image(systemName: "arrow.right")
+                            .foregroundColor(.brandCyan)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.isGeneratingAI || availableItems.isEmpty)
         }
     }
 
@@ -493,7 +553,7 @@ public struct PlanningWizardView: View {
                     viewModel.isLoading ? "Creating..." : "Create Focus Card",
                     icon: "checkmark",
                     isLoading: viewModel.isLoading,
-                    isDisabled: !canProceed
+                    isDisabled: !canProceed || viewModel.isGeneratingAI
                 ) {
                     Task {
                         await createFocusCard()
@@ -503,7 +563,7 @@ public struct PlanningWizardView: View {
                 AndreButton.primary(
                     "Continue",
                     icon: "arrow.right",
-                    isDisabled: !canProceed
+                    isDisabled: !canProceed || viewModel.isGeneratingAI
                 ) {
                     withAnimation {
                         goToNextStep()
@@ -526,13 +586,16 @@ public struct PlanningWizardView: View {
     // MARK: - Actions
 
     private func loadAvailableItems() async {
-        isLoadingItems = true
+        await MainActor.run {
+            isLoadingItems = true
+        }
 
-        // TODO: Load from LocalStore
-        // For now, using placeholder data
-        availableItems = ListItem.placeholderItems
+        let items = await viewModel.loadPlanningItems()
 
-        isLoadingItems = false
+        await MainActor.run {
+            availableItems = items.isEmpty ? ListItem.placeholderItems : items
+            isLoadingItems = false
+        }
     }
 
     private func goToNextStep() {
@@ -546,10 +609,8 @@ public struct PlanningWizardView: View {
     }
 
     private func createFocusCard() async {
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-
         await viewModel.createFocusCard(
-            date: tomorrow,
+            date: planningDate,
             items: viewModel.selectedItems,
             theme: viewModel.theme,
             energyBudget: viewModel.energyBudget,
@@ -557,6 +618,7 @@ public struct PlanningWizardView: View {
         )
 
         if viewModel.error == nil {
+            onComplete?()
             dismiss()
         }
     }
@@ -566,12 +628,16 @@ public struct PlanningWizardView: View {
         case .selectItems:
             return !viewModel.selectedItems.isEmpty && viewModel.selectedItems.count <= 5
         case .setTheme:
-            return !viewModel.theme.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return !viewModel.theme.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isGeneratingAI
         case .defineSuccess:
             return !viewModel.successMetric.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .review:
             return viewModel.canCreateCard
         }
+    }
+
+    private var planningDate: Date {
+        Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
     }
 }
 
@@ -616,5 +682,6 @@ private struct SelectableItemRow: View {
 // MARK: - Preview
 
 #Preview {
-    PlanningWizardView(viewModel: FocusCardViewModel())
+    @Previewable @State var viewModel = FocusCardViewModel()
+    return PlanningWizardView(viewModel: viewModel)
 }

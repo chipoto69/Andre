@@ -1,5 +1,28 @@
 import SwiftUI
 
+/// Main app entry point that handles onboarding and main experience.
+///
+/// Shows onboarding for first-time users, then transitions to main app experience.
+public struct AndreApp: View {
+    @State private var hasCompletedOnboarding = UserDefaults.standard.hasCompletedOnboarding
+
+    public init() {}
+
+    public var body: some View {
+        Group {
+            if hasCompletedOnboarding {
+                AndreRootView()
+            } else {
+                OnboardingContainerView {
+                    // Mark onboarding as completed and show main app
+                    UserDefaults.standard.hasCompletedOnboarding = true
+                    hasCompletedOnboarding = true
+                }
+            }
+        }
+    }
+}
+
 /// Root container for the Andre iOS experience with enhanced design system.
 ///
 /// This is the updated version integrating the new design system and feature modules.
@@ -23,6 +46,12 @@ public struct AndreRootView: View {
                     Label("Lists", systemImage: "list.bullet")
                 }
 
+            StructuredProcrastinationView()
+                .tag(Tab.suggestions)
+                .tabItem {
+                    Label("Switch", systemImage: "arrow.triangle.branch")
+                }
+
             AntiTodoViewEnhanced()
                 .tag(Tab.antiTodo)
                 .tabItem {
@@ -36,6 +65,7 @@ public struct AndreRootView: View {
 enum Tab {
     case focus
     case lists
+    case suggestions
     case antiTodo
 }
 
@@ -45,6 +75,7 @@ enum Tab {
 public struct ListBoardViewEnhanced: View {
     @State private var viewModel = ListBoardViewModel()
     @State private var showQuickCapture = false
+    @State private var showPlanningWizard = false
 
     public init() {}
 
@@ -62,17 +93,51 @@ public struct ListBoardViewEnhanced: View {
                 }
             }
             .background(Color.backgroundPrimary)
-            .navigationTitle("Three Lists")
+            .navigationTitle(viewModel.isSelectingForPlanning ? "Select Items" : "Three Lists")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if viewModel.isSelectingForPlanning {
+                        Button("Cancel") {
+                            viewModel.togglePlanningMode()
+                        }
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { showQuickCapture = true }) {
-                        Label("Add", systemImage: "plus")
+                    if viewModel.isSelectingForPlanning {
+                        Button("Next") {
+                            showPlanningWizard = true
+                        }
+                        .disabled(!viewModel.canProceedWithPlanning)
+                        .foregroundColor(viewModel.canProceedWithPlanning ? .brandCyan : .textTertiary)
+                    } else {
+                        Menu {
+                            Button(action: { viewModel.togglePlanningMode() }) {
+                                Label("Plan Tomorrow", systemImage: "target")
+                            }
+
+                            Button(action: { showQuickCapture = true }) {
+                                Label("Quick Capture", systemImage: "plus")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                        }
                     }
                 }
             }
             .sheet(isPresented: $showQuickCapture) {
                 QuickCaptureSheet(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showPlanningWizard) {
+                PlanningWizardView(
+                    viewModel: FocusCardViewModel(),
+                    preSelectedItems: viewModel.getSelectedItems(),
+                    onComplete: {
+                        viewModel.togglePlanningMode()
+                        showPlanningWizard = false
+                    }
+                )
             }
             .task {
                 await viewModel.loadBoard()
@@ -87,8 +152,15 @@ public struct ListBoardViewEnhanced: View {
     private var listBoardContent: some View {
         ScrollView {
             VStack(spacing: Spacing.xl) {
+                // Selection banner
+                if viewModel.isSelectingForPlanning {
+                    selectionBanner
+                }
+
                 // List type selector
-                listTypeSelector
+                if !viewModel.isSelectingForPlanning {
+                    listTypeSelector
+                }
 
                 // List columns
                 ForEach(viewModel.board.columns) { column in
@@ -96,6 +168,29 @@ public struct ListBoardViewEnhanced: View {
                 }
             }
             .padding(Spacing.screenPadding)
+        }
+    }
+
+    @ViewBuilder
+    private var selectionBanner: some View {
+        AndreCard(style: .accent) {
+            HStack {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Select 1-5 items for tomorrow")
+                        .font(.titleSmall)
+                        .foregroundColor(.textPrimary)
+
+                    Text("\(viewModel.selectedItemsForPlanning.count) / 5 selected")
+                        .font(.bodySmall)
+                        .foregroundColor(.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 32))
+                    .foregroundColor(.brandCyan)
+            }
         }
     }
 
@@ -178,6 +273,8 @@ public struct ListBoardViewEnhanced: View {
                         ForEach(column.items) { item in
                             ListItemRow(
                                 item: item,
+                                isSelectionMode: viewModel.isSelectingForPlanning,
+                                isSelected: viewModel.isItemSelected(item),
                                 onToggleComplete: {
                                     Task {
                                         await viewModel.toggleItemCompletion(item)
@@ -187,6 +284,9 @@ public struct ListBoardViewEnhanced: View {
                                     Task {
                                         await viewModel.deleteItem(item)
                                     }
+                                },
+                                onToggleSelection: {
+                                    viewModel.toggleItemSelection(item)
                                 }
                             )
                         }
@@ -244,17 +344,26 @@ public struct ListBoardViewEnhanced: View {
 
 public struct ListItemRow: View {
     let item: ListItem
+    let isSelectionMode: Bool
+    let isSelected: Bool
     let onToggleComplete: () -> Void
     let onDelete: () -> Void
+    let onToggleSelection: () -> Void
 
     public init(
         item: ListItem,
+        isSelectionMode: Bool = false,
+        isSelected: Bool = false,
         onToggleComplete: @escaping () -> Void,
-        onDelete: @escaping () -> Void
+        onDelete: @escaping () -> Void,
+        onToggleSelection: @escaping () -> Void = {}
     ) {
         self.item = item
+        self.isSelectionMode = isSelectionMode
+        self.isSelected = isSelected
         self.onToggleComplete = onToggleComplete
         self.onDelete = onDelete
+        self.onToggleSelection = onToggleSelection
     }
 
     public var body: some View {
@@ -262,18 +371,27 @@ public struct ListItemRow: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 // Header
                 HStack(alignment: .top) {
-                    Button(action: onToggleComplete) {
-                        Image(systemName: item.status == .completed ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 20))
-                            .foregroundColor(item.status == .completed ? .statusSuccess : .textTertiary)
+                    if isSelectionMode {
+                        Button(action: onToggleSelection) {
+                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                .font(.system(size: 20))
+                                .foregroundColor(isSelected ? .brandCyan : .textTertiary)
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        Button(action: onToggleComplete) {
+                            Image(systemName: item.status == .completed ? "checkmark.circle.fill" : "circle")
+                                .font(.system(size: 20))
+                                .foregroundColor(item.status == .completed ? .statusSuccess : .textTertiary)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
 
                     VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text(item.title)
                             .font(.bodyMedium)
                             .foregroundColor(.textPrimary)
-                            .strikethrough(item.status == .completed)
+                            .strikethrough(item.status == .completed && !isSelectionMode)
 
                         if let notes = item.notes, !notes.isEmpty {
                             Text(notes)
@@ -285,12 +403,14 @@ public struct ListItemRow: View {
 
                     Spacer()
 
-                    Button(action: onDelete) {
-                        Image(systemName: "trash")
-                            .font(.system(size: 14))
-                            .foregroundColor(.statusError)
+                    if !isSelectionMode {
+                        Button(action: onDelete) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 14))
+                                .foregroundColor(.statusError)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
 
                 // Meta
@@ -745,6 +865,16 @@ public struct WinEntryRow: View {
 
 // MARK: - Preview
 
-#Preview {
+#Preview("Main App") {
+    AndreApp()
+}
+
+#Preview("Main Experience Only") {
     AndreRootView()
+}
+
+#Preview("Onboarding Only") {
+    OnboardingContainerView {
+        print("Onboarding completed!")
+    }
 }

@@ -27,6 +27,12 @@ public final class ListBoardViewModel {
     /// Filter by list type (nil = show all)
     public var filterListType: ListItem.ListType?
 
+    /// Selection mode for planning wizard
+    public var isSelectingForPlanning = false
+
+    /// Selected items for planning
+    public var selectedItemsForPlanning: Set<UUID> = []
+
     // MARK: - Dependencies
 
     private let localStore: LocalStore
@@ -163,6 +169,43 @@ public final class ListBoardViewModel {
     /// Get active (non-completed) item count
     public func activeItemCount(for listType: ListItem.ListType) -> Int {
         items(for: listType).filter { $0.status != .completed }.count
+    }
+
+    // MARK: - Planning Selection
+
+    /// Toggle selection mode for planning
+    public func togglePlanningMode() {
+        isSelectingForPlanning.toggle()
+        if !isSelectingForPlanning {
+            selectedItemsForPlanning.removeAll()
+        }
+    }
+
+    /// Toggle item selection for planning
+    public func toggleItemSelection(_ item: ListItem) {
+        if selectedItemsForPlanning.contains(item.id) {
+            selectedItemsForPlanning.remove(item.id)
+        } else {
+            // Limit to 5 items maximum
+            if selectedItemsForPlanning.count < 5 {
+                selectedItemsForPlanning.insert(item.id)
+            }
+        }
+    }
+
+    /// Check if an item is selected for planning
+    public func isItemSelected(_ item: ListItem) -> Bool {
+        selectedItemsForPlanning.contains(item.id)
+    }
+
+    /// Get all selected items as ListItem objects
+    public func getSelectedItems() -> [ListItem] {
+        board.columns.flatMap { $0.items }.filter { selectedItemsForPlanning.contains($0.id) }
+    }
+
+    /// Check if selection is valid (1-5 items)
+    public var canProceedWithPlanning: Bool {
+        selectedItemsForPlanning.count >= 1 && selectedItemsForPlanning.count <= 5
     }
 }
 
