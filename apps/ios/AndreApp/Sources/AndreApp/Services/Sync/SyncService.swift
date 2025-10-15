@@ -100,8 +100,13 @@ public final class SyncService {
         _ = try await data(for: request)
     }
 
-    public func generateFocusCard() async throws -> DailyFocusCard {
-        let request = try makeRequest(path: "/v1/focus-card/generate", method: "POST")
+    public func generateFocusCard(for date: Date = Date(), deviceId: String? = nil) async throws -> DailyFocusCard {
+        var request = try makeRequest(path: "/v1/focus-card/generate", method: "POST")
+        let payload = GenerateFocusCardPayload(
+            date: dayFormatter.string(from: date),
+            deviceId: deviceId
+        )
+        request.httpBody = try encoder.encode(payload)
         let data = try await data(for: request)
         let dto = try decoder.decode(DailyFocusCardDTO.self, from: data)
         guard let card = dto.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter) else {
@@ -178,4 +183,9 @@ public final class SyncService {
         }
         return data
     }
+}
+
+private struct GenerateFocusCardPayload: Encodable {
+    let date: String
+    let deviceId: String?
 }
