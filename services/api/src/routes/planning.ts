@@ -11,6 +11,10 @@ const dateQuerySchema = z.object({
   date: IsoDateSchema
 });
 
+const antiTodoQuerySchema = z.object({
+  date: IsoDateSchema.optional()
+});
+
 export const planningRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     "/focus-card",
@@ -75,6 +79,22 @@ export const planningRoutes: FastifyPluginAsync = async (fastify) => {
       const entry = await fastify.services.planService.logAntiTodo(request.body);
       reply.code(201);
       return entry;
+    }
+  );
+
+  fastify.get(
+    "/anti-todo",
+    {
+      schema: {
+        querystring: antiTodoQuerySchema,
+        response: {
+          200: z.array(AntiTodoEntrySchema)
+        }
+      }
+    },
+    async (request) => {
+      const date = request.query.date ?? new Date().toISOString().slice(0, 10);
+      return fastify.services.planService.listAntiTodoEntries(date);
     }
   );
 };

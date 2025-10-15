@@ -35,6 +35,7 @@ Deliver a calm, tactile interface that embodies Marc Andreessen’s three-list r
 - API schema (`services/api/src/routes`) for data contracts.
 - SwiftUI view architecture skeleton (`apps/ios/AndreApp`).
 - Web tech stack (recommended: React + Remix + Tailwind + Framer Motion).
+- Structured procrastination endpoint `/v1/suggestions/structured-procrastination` for quick-win recommendations.
 
 ## Sequencing
 1. Workshop rituals with product + backend teams, refine persona journeys.

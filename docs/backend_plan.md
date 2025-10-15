@@ -12,11 +12,11 @@
    - Wrap persistence in repositories with interfaces for alternative databases.
 2. **API endpoints**
    - CRUD for list items with diff/sync support.
-   - Focus card endpoints (`GET`, `POST /generate`, `PUT`).
-   - Anti-Todo logging + day summary retrieval.
+   - Focus card endpoints (`GET`, `POST /generate`, `PUT`) — **baseline live**.
+   - Anti-Todo logging + day summary retrieval — **baseline live via `/v1/anti-todo`**.
 3. **Sync & heuristics**
    - Device token management, conflict detection, merge policies.
-   - Structured procrastination recommendation service (initial heuristics).
+   - Structured procrastination recommendation service (initial heuristics) — **prototype shipped via `/v1/suggestions/structured-procrastination`**.
    - Nightly worker for focus card pre-generation.
 4. **Observability & quality**
    - Add pino logger, OpenTelemetry traces, structured error responses.

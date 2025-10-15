@@ -23,15 +23,15 @@ iOS AndreApp      Web Frontend
   - `id`, `date`, `items` (references to ListItems), `reflection`
   - `meta`: energy budget, focus theme, success criteria.
 - **Suggestion**
-  - `id`, `type` (`structured_procrastination`, `ritual`, `nudge`)
-  - `payload`: recommended action, context, priority.
+  - `id`, `title`, `description`, `listType`, `score`
+  - `source`: `later`, `watch`, or `momentum` (recent Anti-Todo wins)
 
 ## Data flow
 1. **Capture** — iOS and web clients push ListItems to the API. Mutations emit domain events (`ListItemCreated`, `ListItemUpdated`).
 2. **Sync** — Clients request diff feeds using `updatedSince`. The API tracks device checkpoints via sync tokens; conflict resolution is last-write-wins with merge patches and server-side validation for list assignment rules.
 3. **Nightly ritual** — At 21:00 local time a worker generates candidate focus cards using heuristics (recent commitments, upcoming deadlines, energy tags). Clients can accept/edit the card and persist it via the API.
 4. **Anti-Todo** — Completing tasks or logging ad-hoc wins creates AntiTodo list entries. End-of-day reflection consolidates stats for analytics.
-5. **Structured procrastination** — Worker ranks “lightweight wins” (short tasks from Later list, follow-ups from Watch list) and surfaces them when the user indicates low focus or long idle periods.
+5. **Structured procrastination** — API route `GET /v1/suggestions/structured-procrastination` ranks lightweight wins (Later quick hits, Watch follow-ups, recent Anti-Todo victories) to surface when the user indicates low focus or long idle periods.
 
 ## Services/API layering
 - `routes/` — HTTP adapters (Fastify) for lists, focus cards, analytics, health.

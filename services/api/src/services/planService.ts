@@ -4,7 +4,8 @@ import {
   AntiTodoEntrySchema,
   DailyFocusCard,
   DailyFocusCardSchema,
-  GenerateFocusCardPayloadSchema
+  GenerateFocusCardPayloadSchema,
+  IsoDateSchema
 } from "../domain/focusCard.js";
 import { ListRepository } from "../infra/listRepository.js";
 import { FocusCardRepository } from "../infra/focusCardRepository.js";
@@ -51,6 +52,13 @@ export class PlanService {
     return this.antiTodo.log(parsed);
   }
 
+  async listAntiTodoEntries(date: string): Promise<AntiTodoEntry[]> {
+    const parsedDate = IsoDateSchema.parse(date);
+    const dayStart = startOfDayISO(parsedDate);
+    const dayEnd = endOfDayISO(parsedDate);
+    return this.antiTodo.listByDateRange(dayStart, dayEnd);
+  }
+
   private selectFocusItems(board: BoardSnapshot): ListItem[] {
     const prioritized = [
       ...board.todo.filter((item) => item.status !== "completed"),
@@ -94,4 +102,16 @@ export class PlanService {
     if (items.length >= 5) return "high";
     return "low";
   }
+}
+
+function startOfDayISO(isoDate: string): string {
+  const date = new Date(isoDate);
+  date.setHours(0, 0, 0, 0);
+  return date.toISOString();
+}
+
+function endOfDayISO(isoDate: string): string {
+  const date = new Date(isoDate);
+  date.setHours(23, 59, 59, 999);
+  return date.toISOString();
 }

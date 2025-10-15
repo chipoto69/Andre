@@ -49,3 +49,4 @@ Knowledge workers drown in scattered obligations, follow-ups, and aspirational i
 - Build core persistence layer leveraging SQLite locally and plan PostgreSQL migrations.
 - Enable background task scheduling on iOS via Swift concurrency once UI skeleton lands.
 - Deliver FE/UI agent with componentry spec, color tokens, and interaction blueprint (see `docs/fe_ui_agent_plan.md`).
+- Wire mobile/web clients to the structured procrastination suggestions API and Anti-Todo daily summaries once UI shells exist.

@@ -9,8 +9,10 @@ import { FocusCardRepository } from "./infra/focusCardRepository.js";
 import { AntiTodoRepository } from "./infra/antiTodoRepository.js";
 import { ListService } from "./services/listService.js";
 import { PlanService } from "./services/planService.js";
+import { SuggestionService } from "./services/suggestionService.js";
 import { listsRoutes } from "./routes/lists.js";
 import { planningRoutes } from "./routes/planning.js";
+import { suggestionsRoutes } from "./routes/suggestions.js";
 
 const fastify = Fastify({
   logger: true
@@ -27,11 +29,13 @@ const antiTodoRepository = new AntiTodoRepository(db);
 
 const listService = new ListService(listRepository);
 const planService = new PlanService(listRepository, focusCardRepository, antiTodoRepository);
+const suggestionService = new SuggestionService(listRepository, antiTodoRepository);
 
-fastify.decorate("services", { listService, planService });
+fastify.decorate("services", { listService, planService, suggestionService });
 
 await fastify.register(listsRoutes, { prefix: "/v1" });
 await fastify.register(planningRoutes, { prefix: "/v1" });
+await fastify.register(suggestionsRoutes, { prefix: "/v1" });
 
 fastify.get("/health", async () => ({ status: "ok" }));
 
@@ -51,6 +55,7 @@ declare module "fastify" {
     services: {
       listService: ListService;
       planService: PlanService;
+      suggestionService: SuggestionService;
     };
   }
 }

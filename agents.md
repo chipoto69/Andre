@@ -31,3 +31,4 @@ Andre is a productivity platform rooted in Marc Andreessen’s three-list method
 - Run `pnpm dev` in `services/api` for local backend.
 - Use `Package.swift` + Xcode preview for iOS modules (once Xcode project is generated).
 - Scripts will live in `scripts/` as automation tasks evolve.
+- Hit `GET /v1/suggestions/structured-procrastination` to preview structured procrastination recommendations.

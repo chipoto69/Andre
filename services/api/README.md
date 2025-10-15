@@ -22,6 +22,13 @@ pnpm build   # compile TypeScript
 - `src/infra` — Persistence and external adapters.
 - `tests/` — Unit + contract tests.
 
+### Key endpoints
+- `GET /v1/lists/sync` — Fetch the three-list board snapshot (Todo/Watch/Later/Anti-Todo).
+- `POST /v1/lists` — Create a list entry; `PUT /v1/lists/:id` updates; `DELETE /v1/lists/:id` removes.
+- `POST /v1/focus-card/generate` — Draft the nightly focus card; `GET /v1/focus-card` retrieves committed cards.
+- `POST /v1/anti-todo` — Log a completed win; `GET /v1/anti-todo?date=YYYY-MM-DD` returns the day’s Anti-Todo ledger.
+- `GET /v1/suggestions/structured-procrastination` — Suggest quick wins when procrastination hits (optional `limit=1..10`).
+
 ### Next steps
 - Flesh out migrations + Postgres adapter.
 - Implement background job runner for nightly focus cards.
