@@ -255,6 +255,9 @@ public struct PlanningWizardView: View {
                 "What's the theme or main focus for tomorrow?"
             )
 
+            // AI Generation Button
+            aiGenerateButton
+
             AndreTextField(
                 "Theme",
                 placeholder: "e.g., Deep work on product launch",
@@ -268,6 +271,45 @@ public struct PlanningWizardView: View {
             }
 
             energyBudgetPicker
+        }
+    }
+
+    @ViewBuilder
+    private var aiGenerateButton: some View {
+        AndreCard(style: .accent) {
+            Button(action: {
+                Task {
+                    await viewModel.generateFocusCardWithAI()
+                }
+            }) {
+                HStack {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        HStack(spacing: Spacing.xs) {
+                            Image(systemName: "sparkles")
+                                .foregroundColor(.brandCyan)
+
+                            Text("Generate with AI")
+                                .font(.bodyMedium.weight(.semibold))
+                                .foregroundColor(.textPrimary)
+                        }
+
+                        Text("Let AI suggest theme, energy, and success metric")
+                            .font(.bodySmall)
+                            .foregroundColor(.textSecondary)
+                    }
+
+                    Spacer()
+
+                    if viewModel.isLoading {
+                        LoadingIndicator(style: .circular, size: .small)
+                    } else {
+                        Image(systemName: "arrow.right")
+                            .foregroundColor(.brandCyan)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.isLoading)
         }
     }
 

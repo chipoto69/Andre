@@ -213,4 +213,30 @@ public final class FocusCardViewModel {
 
         return "Balance multiple priorities"
     }
+
+    // MARK: - AI Generation
+
+    /// Generate focus card with AI assistance
+    public func generateFocusCardWithAI() async {
+        isLoading = true
+        error = nil
+
+        do {
+            let generated = try await syncService.generateFocusCard()
+
+            // Pre-populate wizard fields with AI-generated content
+            theme = generated.meta.theme
+            energyBudget = generated.meta.energyBudget
+            successMetric = generated.meta.successMetric
+
+            // Optionally pre-select items if they match available items
+            // (This would require matching by title or other criteria)
+
+        } catch {
+            self.error = error
+            print("Failed to generate focus card with AI: \(error)")
+        }
+
+        isLoading = false
+    }
 }
