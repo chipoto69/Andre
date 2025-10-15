@@ -5,9 +5,8 @@ import SwiftData
 ///
 /// Rewritten to use SwiftData for real persistence across app launches.
 /// Maintains the same async/await API as the placeholder implementation.
-@MainActor
-public final class LocalStore {
-    public static let shared = LocalStore()
+public final class LocalStore: @unchecked Sendable {
+    @MainActor public static let shared = LocalStore()
 
     private let modelContainer: ModelContainer
     private let calendar = Calendar.current
@@ -36,6 +35,7 @@ public final class LocalStore {
     }
 
     /// Access the model context for database operations
+    @MainActor
     private var context: ModelContext {
         modelContainer.mainContext
     }
@@ -43,6 +43,7 @@ public final class LocalStore {
     // MARK: - List Board Operations
 
     /// Load the cached list board with all items
+    @MainActor
     public func loadListBoard() async -> ListBoard? {
         let descriptor = FetchDescriptor<ListItemEntity>(
             predicate: #Predicate { !$0.pendingDeletion }
@@ -69,6 +70,7 @@ public final class LocalStore {
     }
 
     /// Persist a new board snapshot (bulk replace)
+    @MainActor
     public func cache(board: ListBoard) async {
         // Extract all items from columns
         let items = board.columns.flatMap { $0.items }
@@ -92,6 +94,7 @@ public final class LocalStore {
     }
 
     /// Upsert a list item in the local cache
+    @MainActor
     public func saveListItem(_ item: ListItem, markForSync: Bool = true) async {
         let descriptor = FetchDescriptor<ListItemEntity>(
             predicate: #Predicate { $0.id == item.id }
@@ -110,6 +113,7 @@ public final class LocalStore {
     }
 
     /// Remove a list item from the cache (soft delete)
+    @MainActor
     public func deleteListItem(_ id: UUID) async {
         let descriptor = FetchDescriptor<ListItemEntity>(
             predicate: #Predicate { $0.id == id }
@@ -130,6 +134,7 @@ public final class LocalStore {
     // MARK: - Focus Card Operations
 
     /// Load a focus card for a given date
+    @MainActor
     public func loadFocusCard(for date: Date) async -> DailyFocusCard? {
         let normalizedDate = normalized(date)
 
@@ -154,6 +159,7 @@ public final class LocalStore {
     }
 
     /// Save or replace the cached focus card
+    @MainActor
     public func saveFocusCard(_ card: DailyFocusCard, markForSync: Bool = true) async {
         let normalizedDate = normalized(card.date)
 
@@ -176,6 +182,7 @@ public final class LocalStore {
     // MARK: - Anti-Todo Operations
 
     /// Load the Anti-Todo log for a given date
+    @MainActor
     public func loadAntiTodoLog(for date: Date) async -> AntiTodoLog {
         let normalizedDate = normalized(date)
 
@@ -192,6 +199,7 @@ public final class LocalStore {
     }
 
     /// Append an Anti-Todo entry for the provided date (defaults to today)
+    @MainActor
     public func appendAntiTodoEntry(_ entry: AntiTodoLog.Entry, on date: Date = Date()) async {
         let normalizedDate = normalized(date)
         let entity = AntiTodoMapper.toEntity(entry, date: normalizedDate, needsSync: true)
@@ -201,6 +209,7 @@ public final class LocalStore {
     }
 
     /// Replace the cached Anti-Todo log with a new snapshot
+    @MainActor
     public func saveAntiTodoLog(_ log: AntiTodoLog) async {
         let normalizedDate = normalized(log.date)
 
@@ -227,6 +236,7 @@ public final class LocalStore {
     // MARK: - Sync Queue Operations
 
     /// Get all pending sync operations
+    @MainActor
     public func getPendingSyncOperations() async -> [SyncQueueOperationEntity] {
         let descriptor = FetchDescriptor<SyncQueueOperationEntity>(
             predicate: #Predicate { !$0.isProcessing },
@@ -237,18 +247,21 @@ public final class LocalStore {
     }
 
     /// Mark sync operation as processing
+    @MainActor
     public func markSyncOperationProcessing(_ operation: SyncQueueOperationEntity) async {
         operation.isProcessing = true
         try? context.save()
     }
 
     /// Remove completed sync operation
+    @MainActor
     public func removeSyncOperation(_ operation: SyncQueueOperationEntity) async {
         context.delete(operation)
         try? context.save()
     }
 
     /// Record failed sync attempt
+    @MainActor
     public func recordSyncFailure(_ operation: SyncQueueOperationEntity, error: String) async {
         operation.attemptCount += 1
         operation.lastAttemptAt = Date.now
