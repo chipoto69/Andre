@@ -52,7 +52,7 @@ export default function SwitchPage() {
               Failed to load suggestions
             </p>
             <p className="mt-sm text-body-sm text-text-tertiary">
-              {error instanceof Error ? error.message : 'Unknown error'}
+              Please try again or contact support if the problem persists.
             </p>
             <Button onClick={() => refetch()} variant="primary" className="mt-lg">
               Try Again

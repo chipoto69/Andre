@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DailyFocusCard, ListItem } from '@/lib/api-client';
 import { Card, Tag, TextArea, Button } from '@/components/ui';
 import { formatDate } from '@/lib/utils';
@@ -19,6 +19,11 @@ const energyColors = {
 export function FocusCard({ card, onUpdate }: FocusCardProps) {
   const [isEditingReflection, setIsEditingReflection] = useState(false);
   const [reflection, setReflection] = useState(card.reflection || '');
+
+  // Sync reflection state when card prop changes
+  useEffect(() => {
+    setReflection(card.reflection || '');
+  }, [card.reflection]);
 
   const handleSaveReflection = () => {
     onUpdate({ reflection });
