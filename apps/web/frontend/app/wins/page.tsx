@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { WinTimeline } from '@/components/wins/WinTimeline';
 import { AddWinModal } from '@/components/wins/AddWinModal';
@@ -9,7 +9,6 @@ import { LoadingIndicator, Button, Card } from '@/components/ui';
 import { getTodayDate, formatDate } from '@/lib/utils';
 
 export default function WinsPage() {
-  const queryClient = useQueryClient();
   const [isAddWinOpen, setIsAddWinOpen] = useState(false);
   const selectedDate = getTodayDate();
 
@@ -64,7 +63,7 @@ export default function WinsPage() {
           <div className="text-center">
             <p className="text-body-md text-status-error">Failed to load wins</p>
             <p className="mt-sm text-body-sm text-text-tertiary">
-              {error instanceof Error ? error.message : 'Unknown error'}
+              Please try again or contact support if the problem persists.
             </p>
           </div>
         )}
