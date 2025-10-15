@@ -10,7 +10,8 @@ struct BoardDTO: Codable {
         let columns: [ListBoard.Column] = [
             (.todo, "Todo", todo),
             (.watch, "Watch", watch),
-            (.later, "Later", later)
+            (.later, "Later", later),
+            (.antiTodo, "Anti-Todo", antiTodo)
         ].map { listType, title, items in
             ListBoard.Column(
                 listType: listType,
