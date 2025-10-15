@@ -17,7 +17,7 @@ public final class OfflineQueueProcessor {
 
     // MARK: - Initialization
 
-    nonisolated public init(
+    public init(
         localStore: LocalStore,
         networkMonitor: NetworkMonitor,
         apiClient: APIClient = APIClient(configuration: .development)
