@@ -1,5 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import type { ListItem, DailyFocusCard, AntiTodoEntry } from './api-client';
+import type { ListItem, DailyFocusCard, AntiTodoEntry, ListType } from './api-client';
 
 // ============================================================================
 // Database Schema
@@ -56,6 +56,11 @@ class DatabaseManager {
 
   async init() {
     if (this.db) return this.db;
+
+    // Guard against SSR/non-browser environments
+    if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+      throw new Error('DatabaseManager must be used in a browser with IndexedDB support.');
+    }
 
     this.db = await openDB<AndreDB>(this.dbName, this.version, {
       upgrade(db) {
@@ -124,7 +129,7 @@ class DatabaseManager {
     return db.getAll('listItems');
   }
 
-  async getListItemsByType(listType: string): Promise<ListItem[]> {
+  async getListItemsByType(listType: ListType): Promise<ListItem[]> {
     const db = await this.init();
     return db.getAllFromIndex('listItems', 'by-list-type', listType);
   }
