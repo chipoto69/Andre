@@ -142,3 +142,23 @@ struct AntiTodoEntryDTO: Codable {
         return AntiTodoLog.Entry(id: id, title: title, completedAt: date)
     }
 }
+
+struct SuggestionDTO: Codable {
+    let id: String
+    let title: String
+    let description: String
+    let listType: ListItem.ListType
+    let score: Double
+    let source: String
+
+    func toDomain() -> Suggestion {
+        Suggestion(
+            id: id,
+            title: title,
+            description: description,
+            listType: listType,
+            score: score,
+            source: Suggestion.Source(rawValue: source) ?? .later
+        )
+    }
+}

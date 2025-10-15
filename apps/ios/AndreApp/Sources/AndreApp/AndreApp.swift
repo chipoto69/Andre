@@ -23,6 +23,12 @@ public struct AndreRootView: View {
                     Label("Lists", systemImage: "list.bullet")
                 }
 
+            StructuredProcrastinationView()
+                .tag(Tab.suggestions)
+                .tabItem {
+                    Label("Switch", systemImage: "arrow.triangle.branch")
+                }
+
             AntiTodoViewEnhanced()
                 .tag(Tab.antiTodo)
                 .tabItem {
@@ -36,6 +42,7 @@ public struct AndreRootView: View {
 enum Tab {
     case focus
     case lists
+    case suggestions
     case antiTodo
 }
 

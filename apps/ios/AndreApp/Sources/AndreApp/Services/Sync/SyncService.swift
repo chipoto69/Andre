@@ -133,6 +133,17 @@ public final class SyncService {
         return dto.toDomain(using: isoDateTimeFormatter, dayFormatter: dayFormatter)
     }
 
+    public func fetchSuggestions(limit: Int = 5) async throws -> [Suggestion] {
+        let request = try makeRequest(
+            path: "/v1/suggestions/structured-procrastination",
+            method: "GET",
+            queryItems: [URLQueryItem(name: "limit", value: String(limit))]
+        )
+        let data = try await data(for: request)
+        let suggestions = try decoder.decode([SuggestionDTO].self, from: data)
+        return suggestions.map { $0.toDomain() }
+    }
+
     private func makeRequest(
         path: String,
         method: String,
