@@ -1,15 +1,22 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, ListItem } from '@/lib/api-client';
 import { useAppStore } from '@/lib/store';
 import { ListBoard } from '@/components/lists/ListBoard';
+import { QuickCaptureModal } from '@/components/lists/QuickCaptureModal';
 import { LoadingIndicator } from '@/components/ui';
 
 export default function ListsPage() {
   const queryClient = useQueryClient();
-  const { isPlanningMode, setPlanningMode, selectedItemsForPlanning, clearSelection } =
-    useAppStore();
+  const {
+    isPlanningMode,
+    setPlanningMode,
+    selectedItemsForPlanning,
+    clearSelection,
+    isQuickCaptureOpen,
+    setQuickCaptureOpen,
+  } = useAppStore();
 
   // Fetch lists board
   const {
@@ -31,7 +38,7 @@ export default function ListsPage() {
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: any }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<ListItem> }) =>
       apiClient.updateListItem(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lists'] });
@@ -88,6 +95,14 @@ export default function ListsPage() {
             </div>
 
             <div className="flex gap-md">
+              {!isPlanningMode && (
+                <button
+                  onClick={() => setQuickCaptureOpen(true)}
+                  className="rounded-medium bg-accent-primary px-lg py-sm text-body-md font-medium text-brand-black transition-colors hover:bg-accent-primary/90"
+                >
+                  + Add Item
+                </button>
+              )}
               {isPlanningMode && (
                 <button
                   onClick={handleCreateFocusCard}
@@ -122,6 +137,12 @@ export default function ListsPage() {
           />
         )}
       </main>
+
+      {/* Quick Capture Modal */}
+      <QuickCaptureModal
+        isOpen={isQuickCaptureOpen}
+        onClose={() => setQuickCaptureOpen(false)}
+      />
     </div>
   );
 }

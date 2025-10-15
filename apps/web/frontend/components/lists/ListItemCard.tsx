@@ -9,7 +9,7 @@ import { formatDate } from '@/lib/utils';
 interface ListItemCardProps {
   item: ListItem;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: any) => void;
+  onUpdate: (id: string, updates: Partial<ListItem>) => void;
 }
 
 const statusColors = {
