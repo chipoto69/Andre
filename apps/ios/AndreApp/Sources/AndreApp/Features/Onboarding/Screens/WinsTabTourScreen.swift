@@ -87,7 +87,7 @@ public struct WinsTabTourScreen: View {
                         Divider()
                             .background(Color.textTertiary.opacity(0.3))
 
-                        Text(""The secret to productivity is recognizing your wins"")
+                        Text("The secret to productivity is recognizing your wins")
                             .font(.bodySmall)
                             .italic()
                             .foregroundColor(.textTertiary)
