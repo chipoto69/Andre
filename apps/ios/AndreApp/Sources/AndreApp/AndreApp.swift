@@ -1,5 +1,27 @@
 import SwiftUI
 
+/// Main app entry point that handles onboarding and main experience.
+///
+/// Shows onboarding for first-time users, then transitions to main app experience.
+public struct AndreApp: View {
+    @State private var hasCompletedOnboarding = UserDefaults.standard.hasCompletedOnboarding
+
+    public init() {}
+
+    public var body: some View {
+        Group {
+            if hasCompletedOnboarding {
+                AndreRootView()
+            } else {
+                OnboardingContainerView {
+                    // Mark onboarding as completed and show main app
+                    hasCompletedOnboarding = true
+                }
+            }
+        }
+    }
+}
+
 /// Root container for the Andre iOS experience with enhanced design system.
 ///
 /// This is the updated version integrating the new design system and feature modules.
@@ -842,6 +864,16 @@ public struct WinEntryRow: View {
 
 // MARK: - Preview
 
-#Preview {
+#Preview("Main App") {
+    AndreApp()
+}
+
+#Preview("Main Experience Only") {
     AndreRootView()
+}
+
+#Preview("Onboarding Only") {
+    OnboardingContainerView {
+        print("Onboarding completed!")
+    }
 }
